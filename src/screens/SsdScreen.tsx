@@ -301,9 +301,11 @@ export const SsdScreen: React.FC<SsdScreenProps> = ({ isDark = false }) => {
       ) : applications.length === 0 ? (
         <View style={styles.centerContainer}>
           <Truck size={40} color={colors.textSub} style={{ opacity: 0.5, marginBottom: 12 }} />
-          <Text style={[styles.emptyTitle, { color: colors.textMain }]}>No {activeTab} applications</Text>
+          <Text style={[styles.emptyTitle, { color: colors.textMain }]}>
+            {activeTab === "all" ? "No applications found" : `No ${activeTab} applications`}
+          </Text>
           <Text style={[styles.emptySub, { color: colors.textSub }]}>
-            Applications submitted via SSD mobile app appear here
+            Applications submitted via SSD mobile app appear here automatically
           </Text>
         </View>
       ) : (

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- Clean Pure White Background -->
+  <rect width="100%" height="100%" fill="#FFFFFF"/>
+  
+  <!-- Centered SSA Shield Emblem -->
+  <g transform="translate(136, 44) scale(0.46875)">
+    <g transform="matrix(1.3633436,0,0,1.3633436,-93.015951,-93.015951)">
+      <path
+        style="fill:#EA580C;fill-opacity:1;stroke-width:0.56967"
+        d="m 256,110.16459 c -44.81704,47.09572 -119.24779,36.45885 -119.24779,36.45885 0,0 0,52.4096 0,127.60599 0,75.19638 119.24779,127.60598 119.24779,127.60598 0,0 119.24779,-52.4096 119.24779,-127.60598 0,-75.19639 0,-127.60599 0,-127.60599 0,0 -74.43075,10.63687 -119.24779,-36.45885 z" />
+      <g transform="matrix(0.76653038,0,0,0.76653038,-215.29283,-82.124219)">
+        <path
+          d="m 667.45144,347.65068 a 61.720517,61.720517 0 1 0 -53.61958,92.58069 61.720517,61.720517 0 1 1 -53.61978,92.58088"
+          fill="none"
+          stroke="#FFFFFF"
+          stroke-width="38.5754" />
+        <g transform="translate(11.568344,17.281829)">
+          <circle cx="549.77832" cy="523.64111" r="25.634045" fill="#FFFFFF" style="stroke-width:3.20426" />
+          <circle cx="549.77832" cy="523.64111" r="9.6127663" fill="#EA580C" style="stroke-width:3.20426" />
+        </g>
+      </g>
+    </g>
+  </g>
+
+  <!-- Centered Wordmark Typography -->
+  <text x="256" y="348" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="54" font-weight="900" fill="#0F172A" letter-spacing="4">SSA</text>
+  <text x="256" y="392" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="18" font-weight="800" fill="#EA580C" letter-spacing="3">SMARTSHOPPER ADMIN</text>
+  <text x="256" y="424" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="12" font-weight="600" fill="#64748B" letter-spacing="1.5">JRINA PRIVATE LIMITED</text>
+</svg>

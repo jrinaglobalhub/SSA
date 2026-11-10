@@ -1,0 +1,40 @@
+{
+  "appId": "online.jrina.smartshopper.admin",
+  "productName": "SSA",
+  "copyright": "Copyright © 2026 JRINA Private Limited",
+  "electronVersion": "45.2.1",
+  "compression": "normal",
+  "asar": true,
+  "directories": {
+    "output": "../dist-electron"
+  },
+  "files": [
+    "dist/**/*",
+    "main.js",
+    "icon.ico"
+  ],
+  "win": {
+    "icon": "icon.ico",
+    "target": [
+      {
+        "target": "nsis",
+        "arch": ["x64"]
+      },
+      {
+        "target": "portable",
+        "arch": ["x64"]
+      }
+    ]
+  },
+  "nsis": {
+    "oneClick": false,
+    "allowToChangeInstallationDirectory": true,
+    "installerIcon": "icon.ico",
+    "uninstallerIcon": "icon.ico",
+    "installerHeaderIcon": "icon.ico",
+    "createDesktopShortcut": true,
+    "createStartMenuShortcut": true,
+    "shortcutName": "SSA",
+    "runAfterFinish": true
+  }
+}

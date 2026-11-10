@@ -1,0 +1,12 @@
+node_modules/
+.expo/
+dist/
+build/
+android/app/build/
+android/.gradle/
+windows/SSA/bin/
+windows/SSA/obj/
+windows/bin/
+windows/obj/
+*.log
+.DS_Store

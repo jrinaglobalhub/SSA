@@ -1,0 +1,7 @@
+{
+  "name": "smartshopper-admin",
+  "version": "1.0.0",
+  "description": "SmartShopper Admin Windows Desktop Application",
+  "author": "JRINA Private Limited",
+  "main": "main.js"
+}

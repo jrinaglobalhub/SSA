@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>SSA - Login Screen & About Section Branding</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background: #0F172A; color: #F8FAFC; padding: 40px; }
+    .header { text-align: center; margin-bottom: 32px; }
+    .header h1 { font-size: 26px; font-weight: 900; color: #FFFFFF; }
+    .header p { font-size: 14px; color: #94A3B8; margin-top: 6px; }
+
+    .grid { display: flex; gap: 24px; justify-content: center; align-items: stretch; max-width: 1200px; margin: 0 auto; }
+    
+    /* Login Card Light */
+    .card-light {
+      background: #FFFFFF;
+      border: 1px solid #E2E8F0;
+      border-radius: 20px;
+      padding: 32px;
+      color: #0F172A;
+      flex: 1;
+      max-width: 380px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    /* Login Card Dark */
+    .card-dark {
+      background: #161E2E;
+      border: 1px solid #334155;
+      border-radius: 20px;
+      padding: 32px;
+      color: #F8FAFC;
+      flex: 1;
+      max-width: 380px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    /* About Modal Card */
+    .card-about {
+      background: #FFFFFF;
+      border: 1px solid #E2E8F0;
+      border-radius: 20px;
+      padding: 32px;
+      color: #0F172A;
+      flex: 1;
+      max-width: 380px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+    }
+
+    .badge-clearance {
+      background: #FFF7ED;
+      border: 1px solid #FFEDD5;
+      color: #EA580C;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 1.2px;
+      padding: 5px 12px;
+      border-radius: 16px;
+      display: inline-block;
+      margin: 12px 0 16px 0;
+    }
+    .input-box {
+      border: 1px solid #E2E8F0;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 13px;
+      margin-bottom: 12px;
+      background: #F8FAFC;
+      color: #334155;
+      font-weight: 500;
+    }
+    .card-dark .input-box {
+      border-color: #334155;
+      background: #0F172A;
+      color: #94A3B8;
+    }
+    .btn-submit {
+      background: #EA580C;
+      color: #FFFFFF;
+      font-weight: 800;
+      font-size: 14px;
+      padding: 12px;
+      border-radius: 10px;
+      text-align: center;
+      margin-top: 8px;
+      box-shadow: 0 4px 10px rgba(234, 88, 12, 0.3);
+    }
+    .disclaimer {
+      font-size: 11px;
+      color: #64748B;
+      text-align: center;
+      margin-top: 20px;
+      line-height: 15px;
+    }
+    .card-dark .disclaimer { color: #94A3B8; }
+
+    /* About specs */
+    .about-item {
+      background: #F8FAFC;
+      border: 1px solid #E2E8F0;
+      border-radius: 8px;
+      padding: 10px 12px;
+      margin-bottom: 8px;
+    }
+    .about-label { font-size: 9px; font-weight: 800; color: #64748B; letter-spacing: 1px; }
+    .about-val { font-size: 12px; font-weight: 700; color: #0F172A; margin-top: 2px; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Login Screen &amp; About Section Branding</h1>
+    <p>Super Admin Access • Light &amp; Dark Mode Consistency • JRINA Private Limited Attribution</p>
+  </div>
+
+  <div class="grid">
+    <!-- Light Mode Login -->
+    <div class="card-light">
+      <div style="text-align:center;">
+        <span style="font-size:11px; font-weight:800; color:#64748B; text-transform:uppercase; letter-spacing:1px;">Light Mode</span>
+        <div style="margin:16px 0 8px 0;">
+          <img src="../assets/ssa-logo-stacked.png" style="max-height:120px; object-fit:contain;">
+        </div>
+        <div class="badge-clearance">SUPER ADMIN ACCESS ONLY</div>
+        
+        <div style="text-align:left; margin-top:4px;">
+          <label style="font-size:11px; font-weight:700; color:#475569; display:block; margin-bottom:4px;">Admin Identifier</label>
+          <div class="input-box">admin@jrina.online</div>
+          <label style="font-size:11px; font-weight:700; color:#475569; display:block; margin-bottom:4px;">Master Security Passkey</label>
+          <div class="input-box">••••••••••••••••</div>
+          <div class="btn-submit">Sign In to Dashboard</div>
+        </div>
+      </div>
+      <p class="disclaimer">Restricted to JRINA Private Limited authorized executives. Actions are cryptographically logged.</p>
+    </div>
+
+    <!-- Dark Mode Login -->
+    <div class="card-dark">
+      <div style="text-align:center;">
+        <span style="font-size:11px; font-weight:800; color:#94A3B8; text-transform:uppercase; letter-spacing:1px;">Dark Mode</span>
+        <div style="margin:16px 0 8px 0;">
+          <div style="background:#FFFFFF; border-radius:18px; padding:8px 12px; display:inline-block;">
+            <img src="../assets/icon-192.png" style="max-height:70px; object-fit:contain;">
+          </div>
+          <h2 style="font-size:24px; font-weight:900; letter-spacing:3px; color:#FFFFFF; margin-top:6px;">SSA</h2>
+          <span style="font-size:11px; font-weight:800; color:#EA580C; letter-spacing:2px; display:block;">SMARTSHOPPER ADMIN</span>
+        </div>
+        <div class="badge-clearance" style="background:#2A1B14; border-color:#7C2D12;">SUPER ADMIN ACCESS ONLY</div>
+        
+        <div style="text-align:left; margin-top:4px;">
+          <label style="font-size:11px; font-weight:700; color:#94A3B8; display:block; margin-bottom:4px;">Admin Identifier</label>
+          <div class="input-box">admin@jrina.online</div>
+          <label style="font-size:11px; font-weight:700; color:#94A3B8; display:block; margin-bottom:4px;">Master Security Passkey</label>
+          <div class="input-box">••••••••••••••••</div>
+          <div class="btn-submit">Sign In to Dashboard</div>
+        </div>
+      </div>
+      <p class="disclaimer">Restricted to JRINA Private Limited authorized executives. Actions are cryptographically logged.</p>
+    </div>
+
+    <!-- About Section Modal -->
+    <div class="card-about">
+      <div style="text-align:center;">
+        <span style="font-size:11px; font-weight:800; color:#64748B; text-transform:uppercase; letter-spacing:1px;">About SSA Modal</span>
+        <div style="margin:16px 0 12px 0;">
+          <img src="../assets/ssa-logo.png" style="max-height:48px; object-fit:contain;">
+        </div>
+
+        <div class="about-item">
+          <div class="about-label">APPLICATION NAME</div>
+          <div class="about-val">SSA (SmartShopper Admin)</div>
+        </div>
+        <div class="about-item">
+          <div class="about-label">VERSION &amp; RELEASE</div>
+          <div class="about-val" style="color:#EA580C;">v1.0.0 (Production Release)</div>
+        </div>
+        <div class="about-item">
+          <div class="about-label">BRAND OWNER</div>
+          <div class="about-val">JRINA Private Limited</div>
+        </div>
+        <div class="about-item">
+          <div class="about-label">TARGET PLATFORMS</div>
+          <div class="about-val">Android Private APK &amp; Windows Desktop</div>
+        </div>
+        <div class="about-item">
+          <div class="about-label">MANAGED ECOSYSTEMS</div>
+          <div class="about-val">SSC • SSM • SSD</div>
+        </div>
+        <div class="about-item">
+          <div class="about-label">SECURITY CLEARANCE</div>
+          <div class="about-val" style="color:#16A34A;">Founder &amp; Super Admin Access</div>
+        </div>
+      </div>
+      <div style="background:#EA580C; color:#FFF; font-weight:700; font-size:13px; padding:10px; border-radius:8px; text-align:center; margin-top:10px;">
+        Close Specification
+      </div>
+    </div>
+  </div>
+</body>
+</html>

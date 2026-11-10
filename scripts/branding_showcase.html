@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>SSA - SmartShopper Admin Branding Showcase</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+    body {
+      background-color: #F1F5F9;
+      color: #0F172A;
+      padding: 40px;
+    }
+    .header {
+      background: #FFFFFF;
+      padding: 32px;
+      border-radius: 16px;
+      border: 1px solid #E2E8F0;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+      margin-bottom: 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .header-left h1 {
+      font-size: 28px;
+      font-weight: 900;
+      letter-spacing: 0.5px;
+      color: #0F172A;
+    }
+    .header-left p {
+      font-size: 14px;
+      color: #64748B;
+      margin-top: 4px;
+    }
+    .badge-primary {
+      background: #FFF7ED;
+      color: #EA580C;
+      border: 1px solid #FFEDD5;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 1px;
+    }
+    .section-title {
+      font-size: 20px;
+      font-weight: 800;
+      color: #0F172A;
+      margin: 36px 0 16px 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 24px;
+    }
+    .card {
+      background: #FFFFFF;
+      border: 1px solid #E2E8F0;
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+    }
+    .card-dark {
+      background: #0B0F17;
+      border: 1px solid #1E293B;
+      color: #F8FAFC;
+    }
+    .card h3 {
+      font-size: 15px;
+      font-weight: 700;
+      color: #64748B;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 16px;
+    }
+    .card-dark h3 {
+      color: #94A3B8;
+    }
+    .image-preview {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      background: #FAFAFA;
+      border-radius: 12px;
+      border: 1px dashed #CBD5E1;
+      min-height: 200px;
+    }
+    .card-dark .image-preview {
+      background: #161E2E;
+      border-color: #334155;
+    }
+    .image-preview img {
+      max-width: 100%;
+      height: auto;
+      object-fit: contain;
+    }
+    
+    /* Device simulation */
+    .phone-mockup {
+      width: 320px;
+      height: 600px;
+      background: #FFFFFF;
+      border-radius: 36px;
+      border: 12px solid #0F172A;
+      box-shadow: 0 12px 32px rgba(0,0,0,0.15);
+      position: relative;
+      overflow: hidden;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+    }
+    .phone-notch {
+      width: 120px;
+      height: 18px;
+      background: #0F172A;
+      border-bottom-left-radius: 12px;
+      border-bottom-right-radius: 12px;
+      margin: 0 auto;
+    }
+    .phone-screen {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      background: #FFFFFF;
+    }
+    .phone-home-screen {
+      flex: 1;
+      background: linear-gradient(135deg, #1E293B 0%, #0F172A 100%);
+      padding: 30px 20px;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      grid-gap: 16px;
+      align-content: start;
+    }
+    .app-icon-slot {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+    .app-icon-slot img {
+      width: 52px;
+      height: 52px;
+      border-radius: 12px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    }
+    .app-icon-slot.round img {
+      border-radius: 50%;
+    }
+    .app-icon-slot span {
+      font-size: 11px;
+      font-weight: 600;
+      color: #FFFFFF;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+    }
+
+    /* Windows Mockup */
+    .windows-window {
+      background: #FFFFFF;
+      border-radius: 8px;
+      border: 1px solid #CBD5E1;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.12);
+      overflow: hidden;
+      width: 100%;
+    }
+    .windows-titlebar {
+      height: 36px;
+      background: #F8FAFC;
+      border-bottom: 1px solid #E2E8F0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 12px;
+    }
+    .titlebar-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #334155;
+    }
+    .titlebar-left img {
+      width: 18px;
+      height: 18px;
+    }
+    .titlebar-controls {
+      display: flex;
+      gap: 12px;
+      color: #64748B;
+      font-size: 12px;
+    }
+    .windows-body {
+      padding: 24px;
+      background: #FFFFFF;
+    }
+
+    /* Palette swatches */
+    .palette {
+      display: flex;
+      gap: 12px;
+      margin-top: 12px;
+    }
+    .swatch {
+      flex: 1;
+      height: 60px;
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 6px;
+      font-size: 10px;
+      font-weight: 700;
+      border: 1px solid rgba(0,0,0,0.06);
+    }
+
+    /* Spec table */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+      font-size: 13px;
+    }
+    th, td {
+      padding: 10px 12px;
+      border-bottom: 1px solid #E2E8F0;
+      text-align: left;
+    }
+    th {
+      color: #64748B;
+      font-weight: 700;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-left">
+      <h1>SSA Branding, Logo &amp; Icon System</h1>
+      <p>SmartShopper Admin • JRINA Private Limited • Phase 2 Production Branding</p>
+    </div>
+    <div class="badge-primary">SUPER ADMIN SPECIFICATION</div>
+  </div>
+
+  <!-- SECTION 1: BRAND IDENTITY & PALETTE -->
+  <div class="section-title">1. Brand Identity &amp; Visual Palette</div>
+  <div class="grid">
+    <div class="card">
+      <h3>Brand Colors</h3>
+      <div class="palette">
+        <div class="swatch" style="background:#EA580C; color:#FFF;">Primary<br>#EA580C</div>
+        <div class="swatch" style="background:#0F172A; color:#FFF;">Secondary<br>#0F172A</div>
+        <div class="swatch" style="background:#FFFFFF; color:#0F172A; border:1px solid #CBD5E1;">Background<br>#FFFFFF</div>
+        <div class="swatch" style="background:#0B0F17; color:#FFF;">Dark Mode<br>#0B0F17</div>
+      </div>
+      <table style="margin-top:20px;">
+        <tr><th>Attribute</th><th>Specification</th></tr>
+        <tr><td>Application Name</td><td><strong>SSA</strong></td></tr>
+        <tr><td>Full Legal Name</td><td>SmartShopper Admin</td></tr>
+        <tr><td>Owner Entity</td><td>JRINA Private Limited</td></tr>
+        <tr><td>Visual Style</td><td>Minimal, modern, administrative, clean</td></tr>
+      </table>
+    </div>
+
+    <div class="card">
+      <h3>Official Wordmark (Stacked)</h3>
+      <div class="image-preview" style="background: #FFFFFF;">
+        <img src="../assets/ssa-logo-stacked.png" alt="SSA Stacked Logo" style="max-height: 180px;">
+      </div>
+      <p style="font-size:12px; color:#64748B; margin-top:10px; text-align:center;">
+        Pure white background (#FFFFFF) with centered administrative shield and authoritative typography.
+      </p>
+    </div>
+
+    <div class="card">
+      <h3>Official Wordmark (Horizontal)</h3>
+      <div class="image-preview" style="background: #FFFFFF;">
+        <img src="../assets/ssa-logo.png" alt="SSA Horizontal Logo" style="max-height: 80px;">
+      </div>
+      <p style="font-size:12px; color:#64748B; margin-top:10px; text-align:center;">
+        Optimized for desktop application header, web navigation, and report headers.
+      </p>
+    </div>
+  </div>
+
+  <!-- SECTION 2: ANDROID LAUNCHER & ADAPTIVE ICONS -->
+  <div class="section-title">2. Android Launcher &amp; Adaptive Icon System</div>
+  <div class="grid">
+    <div class="card">
+      <h3>Android Adaptive Icon Anatomy</h3>
+      <div style="display:flex; justify-content:space-around; align-items:center; padding:16px 0;">
+        <div style="text-align:center;">
+          <div style="width:96px; height:96px; background:#FFFFFF; border:2px solid #CBD5E1; border-radius:12px; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 8px rgba(0,0,0,0.06);">
+            <img src="../assets/android-icon-foreground.png" style="width:70px; height:70px; object-fit:contain;">
+          </div>
+          <span style="font-size:11px; font-weight:700; color:#64748B; display:block; margin-top:6px;">Square Mask</span>
+        </div>
+        <div style="text-align:center;">
+          <div style="width:96px; height:96px; background:#FFFFFF; border:2px solid #CBD5E1; border-radius:50%; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 8px rgba(0,0,0,0.06);">
+            <img src="../assets/android-icon-foreground.png" style="width:70px; height:70px; object-fit:contain;">
+          </div>
+          <span style="font-size:11px; font-weight:700; color:#64748B; display:block; margin-top:6px;">Circle Mask</span>
+        </div>
+        <div style="text-align:center;">
+          <div style="width:96px; height:96px; background:#FFFFFF; border:2px solid #CBD5E1; border-radius:24px; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 8px rgba(0,0,0,0.06);">
+            <img src="../assets/android-icon-foreground.png" style="width:70px; height:70px; object-fit:contain;">
+          </div>
+          <span style="font-size:11px; font-weight:700; color:#64748B; display:block; margin-top:6px;">Squircle Mask</span>
+        </div>
+      </div>
+      <p style="font-size:12px; color:#16A34A; font-weight:600; text-align:center; margin-top:8px;">
+        ✓ Safe-zone scaled (scaleRatio: 0.46) strictly inside 66/108dp circle. Zero clipping across any Android OEM launcher.
+      </p>
+    </div>
+
+    <div class="card">
+      <h3>Android Home Screen Simulation</h3>
+      <div class="phone-mockup" style="height:380px;">
+        <div class="phone-notch"></div>
+        <div class="phone-home-screen">
+          <div class="app-icon-slot">
+            <img src="../assets/icon.png" style="background:#FFF;">
+            <span>SSA</span>
+          </div>
+          <div class="app-icon-slot">
+            <div style="width:52px; height:52px; background:rgba(255,255,255,0.15); border-radius:12px;"></div>
+            <span>Settings</span>
+          </div>
+          <div class="app-icon-slot">
+            <div style="width:52px; height:52px; background:rgba(255,255,255,0.15); border-radius:12px;"></div>
+            <span>Files</span>
+          </div>
+          <div class="app-icon-slot">
+            <div style="width:52px; height:52px; background:rgba(255,255,255,0.15); border-radius:12px;"></div>
+            <span>Chrome</span>
+          </div>
+        </div>
+      </div>
+      <p style="font-size:12px; color:#64748B; margin-top:10px; text-align:center;">
+        App display name verified as <strong>SSA</strong> with crisp visibility on Android home screen.
+      </p>
+    </div>
+
+    <div class="card">
+      <h3>Android Splash Screen (Clean White BG)</h3>
+      <div class="phone-mockup" style="height:380px;">
+        <div class="phone-notch"></div>
+        <div class="phone-screen">
+          <img src="../assets/splash-icon.png" style="width:160px; height:160px; object-fit:contain;">
+          <div style="margin-top:20px; font-size:10px; font-weight:700; color:#64748B; letter-spacing:1px; background:#F8FAFC; border:1px solid #E2E8F0; padding:4px 10px; border-radius:12px;">
+            ● SECURE ADMIN PORTAL
+          </div>
+        </div>
+      </div>
+      <p style="font-size:12px; color:#16A34A; font-weight:600; text-align:center; margin-top:10px;">
+        ✓ Guaranteed pure white background (#FFFFFF). Zero black screen flash during application startup.
+      </p>
+    </div>
+  </div>
+
+  <!-- SECTION 3: WINDOWS DESKTOP APPLICATION BRANDING -->
+  <div class="section-title">3. Windows Desktop Application Branding</div>
+  <div class="grid">
+    <div class="card" style="grid-column: 1 / -1;">
+      <h3>Windows Desktop Application Window &amp; Header</h3>
+      <div class="windows-window">
+        <div class="windows-titlebar">
+          <div class="titlebar-left">
+            <img src="../assets/windows/icon.png" alt="SSA Icon">
+            <span>SSA - SmartShopper Admin (Production Console)</span>
+          </div>
+          <div class="titlebar-controls">
+            <span>―</span>
+            <span>◻</span>
+            <span>✕</span>
+          </div>
+        </div>
+        <div class="windows-body">
+          <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #E2E8F0; padding-bottom:14px; margin-bottom:20px;">
+            <div style="display:flex; align-items:center; gap:12px;">
+              <img src="../assets/ssa-logo.png" style="height:44px; object-fit:contain;">
+            </div>
+            <div style="display:flex; gap:10px;">
+              <span style="background:#FFF7ED; color:#EA580C; border:1px solid #FFEDD5; padding:5px 12px; border-radius:6px; font-size:12px; font-weight:700;">Super Admin Mode</span>
+              <span style="background:#F0FDF4; color:#16A34A; border:1px solid #DCFCE7; padding:5px 12px; border-radius:6px; font-size:12px; font-weight:700;">DB: Connected</span>
+            </div>
+          </div>
+          <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:16px;">
+            <div style="border:1px solid #E2E8F0; border-radius:10px; padding:16px;">
+              <span style="font-size:11px; font-weight:700; color:#64748B; text-transform:uppercase;">Today's Orders</span>
+              <h2 style="font-size:24px; font-weight:900; margin-top:4px; color:#0F172A;">184</h2>
+            </div>
+            <div style="border:1px solid #E2E8F0; border-radius:10px; padding:16px;">
+              <span style="font-size:11px; font-weight:700; color:#64748B; text-transform:uppercase;">SSC Users Today</span>
+              <h2 style="font-size:24px; font-weight:900; margin-top:4px; color:#2563EB;">1,429</h2>
+            </div>
+            <div style="border:1px solid #E2E8F0; border-radius:10px; padding:16px;">
+              <span style="font-size:11px; font-weight:700; color:#64748B; text-transform:uppercase;">SSM Stores Active</span>
+              <h2 style="font-size:24px; font-weight:900; margin-top:4px; color:#16A34A;">86</h2>
+            </div>
+            <div style="border:1px solid #E2E8F0; border-radius:10px; padding:16px;">
+              <span style="font-size:11px; font-weight:700; color:#64748B; text-transform:uppercase;">SSD Couriers Online</span>
+              <h2 style="font-size:24px; font-weight:900; margin-top:4px; color:#9333EA;">34</h2>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p style="font-size:12px; color:#64748B; margin-top:12px;">
+        Windows Application Icon generated as multi-resolution <strong>assets/windows/app.ico</strong> (256x256, 128x128, 64x64, 48x48, 32x32, 24x24, 16x16) and <strong>icon.png</strong>.
+      </p>
+    </div>
+  </div>
+
+  <!-- SECTION 4: LOGIN SCREEN BRANDING (LIGHT & DARK MODE) -->
+  <div class="section-title">4. Login Screen &amp; Dark Mode Compatibility</div>
+  <div class="grid">
+    <div class="card">
+      <h3>Login Screen (Light Mode)</h3>
+      <div style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:12px; padding:24px; text-align:center;">
+        <img src="../assets/ssa-logo-stacked.png" style="max-height:120px; margin-bottom:12px;">
+        <div style="background:#FFF7ED; border:1px solid #FFEDD5; color:#EA580C; font-size:11px; font-weight:800; padding:4px 10px; border-radius:12px; display:inline-block; margin-bottom:16px;">
+          SUPER ADMIN ACCESS ONLY
+        </div>
+        <div style="background:#FFF; border:1px solid #E2E8F0; border-radius:8px; padding:10px; margin-bottom:10px; text-align:left; font-size:12px; color:#64748B;">
+          admin@jrina.online
+        </div>
+        <div style="background:#FFF; border:1px solid #E2E8F0; border-radius:8px; padding:10px; margin-bottom:16px; text-align:left; font-size:12px; color:#64748B;">
+          ••••••••••••••••
+        </div>
+        <div style="background:#EA580C; color:#FFF; font-weight:800; padding:12px; border-radius:8px; font-size:13px;">
+          Sign In to Administration Console
+        </div>
+        <p style="font-size:10px; color:#94A3B8; margin-top:16px;">JRINA Private Limited • SmartShopper Ecosystem</p>
+      </div>
+    </div>
+
+    <div class="card card-dark">
+      <h3>Login Screen (Dark Mode)</h3>
+      <div style="background:#161E2E; border:1px solid #334155; border-radius:12px; padding:24px; text-align:center;">
+        <div style="background:#FFF; border-radius:16px; padding:8px; display:inline-block; margin-bottom:12px;">
+          <img src="../assets/icon-192.png" style="max-height:80px;">
+        </div>
+        <h2 style="font-size:22px; font-weight:900; color:#FFF; letter-spacing:2px;">SSA</h2>
+        <span style="font-size:12px; font-weight:800; color:#EA580C; letter-spacing:2px; display:block; margin-bottom:12px;">SMARTSHOPPER ADMIN</span>
+        <div style="background:#0F172A; border:1px solid #334155; border-radius:8px; padding:10px; margin-bottom:10px; text-align:left; font-size:12px; color:#94A3B8;">
+          admin@jrina.online
+        </div>
+        <div style="background:#0F172A; border:1px solid #334155; border-radius:8px; padding:10px; margin-bottom:16px; text-align:left; font-size:12px; color:#94A3B8;">
+          ••••••••••••••••
+        </div>
+        <div style="background:#EA580C; color:#FFF; font-weight:800; padding:12px; border-radius:8px; font-size:13px;">
+          Sign In to Administration Console
+        </div>
+        <p style="font-size:10px; color:#64748B; margin-top:16px;">JRINA Private Limited • SmartShopper Ecosystem</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Application About Section</h3>
+      <div style="background:#FFFFFF; border:1px solid #E2E8F0; border-radius:12px; padding:20px;">
+        <div style="text-align:center; margin-bottom:14px;">
+          <img src="../assets/ssa-logo.png" style="max-height:48px;">
+        </div>
+        <table style="font-size:12px;">
+          <tr><td><strong>App Name</strong></td><td>SSA (SmartShopper Admin)</td></tr>
+          <tr><td><strong>Version</strong></td><td>1.0.0 (Production Release)</td></tr>
+          <tr><td><strong>Owner</strong></td><td>JRINA Private Limited</td></tr>
+          <tr><td><strong>Platforms</strong></td><td>Android APK &amp; Windows Desktop</td></tr>
+          <tr><td><strong>Security</strong></td><td>Founder &amp; Super Admin Access</td></tr>
+        </table>
+        <p style="font-size:11px; color:#16A34A; font-weight:700; margin-top:14px; text-align:center;">
+          ✓ Fully unified with SSC, SSM &amp; SSD Shared Backend
+        </p>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>
