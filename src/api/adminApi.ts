@@ -1,5 +1,25 @@
 import { supabase } from "./supabase";
 
+export interface SscBanner {
+  id: string;
+  title: string;
+  subtitle?: string;
+  imageUrl: string;
+  linkType: "store" | "deal" | "category" | "custom_url" | "none";
+  targetId?: string;
+  targetName?: string;
+  customUrl?: string;
+  displayOrder: number;
+  isActive: boolean;
+  startDate?: string | null;
+  endDate?: string | null;
+  clicksCount: number;
+  impressionsCount: number;
+  createdAt: string;
+  updatedAt?: string;
+  createdBy?: string;
+}
+
 export interface OverviewMetrics {
   todayOrders: number;
   todaySscUsers: number;
@@ -1637,5 +1657,113 @@ export const AdminApi = {
       volunteers: [],
       error: "Archived campaign tracking not found."
     };
+  },
+
+  /**
+   * Fetch all SSC promotional banners for SSA Admin Console
+   */
+  async getAllSscBanners(): Promise<SscBanner[]> {
+    try {
+      const { data, error } = await supabase.rpc("get_all_ssc_banners_admin");
+      if (error) {
+        console.error("[AdminApi] get_all_ssc_banners_admin error:", error);
+        return [];
+      }
+      return (data || []).map((b: any) => ({
+        id: b.id,
+        title: b.title,
+        subtitle: b.subtitle || "",
+        imageUrl: b.image_url,
+        linkType: b.link_type || "none",
+        targetId: b.target_id || "",
+        targetName: b.target_name || "",
+        customUrl: b.custom_url || "",
+        displayOrder: Number(b.display_order || 0),
+        isActive: Boolean(b.is_active),
+        startDate: b.start_date || null,
+        endDate: b.end_date || null,
+        clicksCount: Number(b.clicks_count || 0),
+        impressionsCount: Number(b.impressions_count || 0),
+        createdAt: b.created_at,
+        updatedAt: b.updated_at,
+        createdBy: b.created_by || "SSA Administrator"
+      }));
+    } catch (err) {
+      console.error("[AdminApi] getAllSscBanners error:", err);
+      return [];
+    }
+  },
+
+  /**
+   * Create or update an SSC promotional banner
+   */
+  async saveSscBanner(banner: Partial<SscBanner>): Promise<{ success: boolean; banner?: SscBanner; error?: string }> {
+    try {
+      const { data, error } = await supabase.rpc("save_ssc_banner", {
+        p_banner: {
+          id: banner.id,
+          title: banner.title,
+          subtitle: banner.subtitle,
+          imageUrl: banner.imageUrl,
+          linkType: banner.linkType,
+          targetId: banner.targetId,
+          targetName: banner.targetName,
+          customUrl: banner.customUrl,
+          displayOrder: banner.displayOrder,
+          isActive: banner.isActive,
+          startDate: banner.startDate,
+          endDate: banner.endDate,
+          createdBy: banner.createdBy || "SSA Administrator"
+        }
+      });
+      if (error) {
+        return { success: false, error: error.message };
+      }
+      if (!data?.success) {
+        return { success: false, error: data?.error || "Failed to save banner." };
+      }
+      return { success: true, banner: data.banner };
+    } catch (err: any) {
+      return { success: false, error: err?.message || "An unexpected error occurred." };
+    }
+  },
+
+  /**
+   * One-click toggle banner active status
+   */
+  async toggleSscBannerStatus(id: string, isActive: boolean): Promise<boolean> {
+    try {
+      const { data, error } = await supabase.rpc("toggle_ssc_banner_status", {
+        p_banner_id: id,
+        p_is_active: isActive
+      });
+      if (error) {
+        console.error("[AdminApi] toggleSscBannerStatus error:", error);
+        return false;
+      }
+      return Boolean(data?.success);
+    } catch (err) {
+      console.error("[AdminApi] toggleSscBannerStatus error:", err);
+      return false;
+    }
+  },
+
+  /**
+   * Delete an SSC promotional banner
+   */
+  async deleteSscBanner(id: string): Promise<boolean> {
+    try {
+      const { data, error } = await supabase.rpc("delete_ssc_banner", {
+        p_banner_id: id
+      });
+      if (error) {
+        console.error("[AdminApi] deleteSscBanner error:", error);
+        return false;
+      }
+      return Boolean(data?.success);
+    } catch (err) {
+      console.error("[AdminApi] deleteSscBanner error:", err);
+      return false;
+    }
   }
 };
