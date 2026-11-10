@@ -5,19 +5,61 @@ export interface SscBanner {
   title: string;
   subtitle?: string;
   imageUrl: string;
-  linkType: "store" | "deal" | "category" | "custom_url" | "none";
+  storagePath?: string;
+  sourceType: "custom" | "ssm_approved";
+  sourceRequestId?: string;
+  merchantId?: string;
+  merchantName?: string;
+  redirectType: "none" | "store" | "deal" | "category" | "custom_url";
+  redirectTarget?: string;
   targetId?: string;
   targetName?: string;
   customUrl?: string;
-  displayOrder: number;
+  linkType?: string;
+  status: "draft" | "active" | "inactive" | "archived";
   isActive: boolean;
+  startAt?: string | null;
+  endAt?: string | null;
   startDate?: string | null;
   endDate?: string | null;
+  targetingType: "all" | "state" | "district" | "city" | "pincode" | "radius";
+  targetState?: string;
+  targetDistrict?: string;
+  targetCity?: string;
+  targetPincodes?: string;
+  targetLatitude?: number | null;
+  targetLongitude?: number | null;
+  targetRadiusKm?: number | null;
+  displayOrder: number;
   clicksCount: number;
   impressionsCount: number;
   createdAt: string;
   updatedAt?: string;
   createdBy?: string;
+}
+
+export interface ApprovedSsmBannerItem {
+  requestId: string;
+  storeId: string;
+  merchantId: string;
+  storeName: string;
+  ownerName: string;
+  storeAddress: string;
+  storeLat: number | null;
+  storeLng: number | null;
+  title: string;
+  description: string;
+  bannerUrl: string;
+  status: string;
+  paymentStatus: string;
+  totalAmount: number;
+  durationDays: number;
+  startDate: string;
+  endDate: string;
+  isPublishedToSsc: boolean;
+  sscBannerId: string | null;
+  sscBannerStatus: string | null;
+  sscDisplayOrder: number;
 }
 
 export interface OverviewMetrics {
@@ -1674,14 +1716,32 @@ export const AdminApi = {
         title: b.title,
         subtitle: b.subtitle || "",
         imageUrl: b.image_url,
-        linkType: b.link_type || "none",
-        targetId: b.target_id || "",
-        targetName: b.target_name || "",
+        storagePath: b.storage_path || undefined,
+        sourceType: (b.source_type as any) || "custom",
+        sourceRequestId: b.source_request_id || undefined,
+        merchantId: b.merchant_id || undefined,
+        merchantName: b.merchant_name || undefined,
+        redirectType: (b.redirect_type as any) || (b.link_type as any) || "none",
+        redirectTarget: b.redirect_target || b.target_id || b.custom_url || "",
+        targetId: b.target_id || b.redirect_target || "",
+        targetName: b.target_name || b.merchant_name || "",
         customUrl: b.custom_url || "",
+        linkType: b.link_type || b.redirect_type || "none",
+        status: (b.status as any) || (b.is_active ? "active" : "inactive"),
+        isActive: Boolean(b.is_active || b.status === "active"),
+        startAt: b.start_at || b.start_date || null,
+        endAt: b.end_at || b.end_date || null,
+        startDate: b.start_date || b.start_at || null,
+        endDate: b.end_date || b.end_at || null,
+        targetingType: (b.targeting_type as any) || "all",
+        targetState: b.target_state || undefined,
+        targetDistrict: b.target_district || undefined,
+        targetCity: b.target_city || undefined,
+        targetPincodes: b.target_pincodes || undefined,
+        targetLatitude: b.target_latitude != null ? Number(b.target_latitude) : null,
+        targetLongitude: b.target_longitude != null ? Number(b.target_longitude) : null,
+        targetRadiusKm: b.target_radius_km != null ? Number(b.target_radius_km) : null,
         displayOrder: Number(b.display_order || 0),
-        isActive: Boolean(b.is_active),
-        startDate: b.start_date || null,
-        endDate: b.end_date || null,
         clicksCount: Number(b.clicks_count || 0),
         impressionsCount: Number(b.impressions_count || 0),
         createdAt: b.created_at,
@@ -1705,14 +1765,31 @@ export const AdminApi = {
           title: banner.title,
           subtitle: banner.subtitle,
           imageUrl: banner.imageUrl,
-          linkType: banner.linkType,
-          targetId: banner.targetId,
-          targetName: banner.targetName,
+          storagePath: banner.storagePath,
+          sourceType: banner.sourceType || "custom",
+          sourceRequestId: banner.sourceRequestId,
+          merchantId: banner.merchantId,
+          merchantName: banner.merchantName,
+          redirectType: banner.redirectType || banner.linkType || "none",
+          redirectTarget: banner.redirectTarget || banner.targetId || banner.customUrl || "",
+          targetId: banner.targetId || banner.redirectTarget,
+          targetName: banner.targetName || banner.merchantName,
           customUrl: banner.customUrl,
-          displayOrder: banner.displayOrder,
-          isActive: banner.isActive,
-          startDate: banner.startDate,
-          endDate: banner.endDate,
+          status: banner.status || (banner.isActive === false ? "inactive" : "active"),
+          isActive: banner.isActive !== false && banner.status !== "inactive" && banner.status !== "draft",
+          displayOrder: banner.displayOrder != null ? Number(banner.displayOrder) : 0,
+          startAt: banner.startAt || banner.startDate,
+          endAt: banner.endAt || banner.endDate,
+          startDate: banner.startDate || banner.startAt,
+          endDate: banner.endDate || banner.endAt,
+          targetingType: banner.targetingType || "all",
+          targetState: banner.targetState,
+          targetDistrict: banner.targetDistrict,
+          targetCity: banner.targetCity,
+          targetPincodes: banner.targetPincodes,
+          targetLatitude: banner.targetLatitude,
+          targetLongitude: banner.targetLongitude,
+          targetRadiusKm: banner.targetRadiusKm,
           createdBy: banner.createdBy || "SSA Administrator"
         }
       });
@@ -1729,13 +1806,89 @@ export const AdminApi = {
   },
 
   /**
-   * One-click toggle banner active status
+   * Retrieve existing approved advertising requests from spotlight_campaigns
+   * along with their current SSC publishing status
    */
-  async toggleSscBannerStatus(id: string, isActive: boolean): Promise<boolean> {
+  async getApprovedSsmBanners(): Promise<ApprovedSsmBannerItem[]> {
     try {
+      const { data, error } = await supabase.rpc("get_approved_ssm_banners");
+      if (error) {
+        console.error("[AdminApi] get_approved_ssm_banners error:", error);
+        return [];
+      }
+      return (data || []).map((row: any) => ({
+        requestId: row.request_id,
+        storeId: row.store_id,
+        merchantId: row.merchant_id,
+        storeName: row.store_name,
+        ownerName: row.owner_name,
+        storeAddress: row.store_address,
+        storeLat: row.store_lat != null ? Number(row.store_lat) : null,
+        storeLng: row.store_lng != null ? Number(row.store_lng) : null,
+        title: row.title,
+        description: row.description || "",
+        bannerUrl: row.banner_url,
+        status: row.status,
+        paymentStatus: row.payment_status,
+        totalAmount: Number(row.total_amount || 0),
+        durationDays: Number(row.duration_days || 0),
+        startDate: row.start_date,
+        endDate: row.end_date,
+        isPublishedToSsc: Boolean(row.is_published_to_ssc),
+        sscBannerId: row.ssc_banner_id || null,
+        sscBannerStatus: row.ssc_banner_status || null,
+        sscDisplayOrder: Number(row.ssc_display_order || 0)
+      }));
+    } catch (err) {
+      console.error("[AdminApi] getApprovedSsmBanners exception:", err);
+      return [];
+    }
+  },
+
+  /**
+   * Publish an already-approved SSM advertising banner to SSC
+   */
+  async publishApprovedSsmBanner(
+    requestId: string,
+    displayOrder = 0,
+    targeting: {
+      targetingType?: "all" | "state" | "district" | "city" | "pincode" | "radius";
+      targetState?: string;
+      targetDistrict?: string;
+      targetCity?: string;
+      targetPincodes?: string;
+      targetLatitude?: number | null;
+      targetLongitude?: number | null;
+      targetRadiusKm?: number | null;
+    } = {}
+  ): Promise<{ success: boolean; error?: string; banner?: any }> {
+    try {
+      const { data, error } = await supabase.rpc("publish_approved_ssm_banner", {
+        p_request_id: requestId,
+        p_display_order: displayOrder,
+        p_targeting: targeting
+      });
+      if (error) {
+        return { success: false, error: error.message };
+      }
+      if (!data?.success) {
+        return { success: false, error: data?.error || "Failed to publish approved banner." };
+      }
+      return { success: true, banner: data.banner };
+    } catch (err: any) {
+      return { success: false, error: err?.message || "An unexpected error occurred." };
+    }
+  },
+
+  /**
+   * Toggle banner status (active, inactive, draft)
+   */
+  async toggleSscBannerStatus(id: string, statusOrActive: string | boolean): Promise<boolean> {
+    try {
+      const statusStr = typeof statusOrActive === "boolean" ? (statusOrActive ? "active" : "inactive") : statusOrActive;
       const { data, error } = await supabase.rpc("toggle_ssc_banner_status", {
         p_banner_id: id,
-        p_is_active: isActive
+        p_status: statusStr
       });
       if (error) {
         console.error("[AdminApi] toggleSscBannerStatus error:", error);
@@ -1764,6 +1917,41 @@ export const AdminApi = {
     } catch (err) {
       console.error("[AdminApi] deleteSscBanner error:", err);
       return false;
+    }
+  },
+
+  /**
+   * Upload custom banner image to Supabase Storage bucket 'ssc-banners'
+   */
+  async uploadBannerImage(file: Blob | File | ArrayBuffer | Uint8Array, fileName: string, contentType = "image/webp"): Promise<{ success: boolean; publicUrl?: string; storagePath?: string; error?: string }> {
+    try {
+      const sanitizedName = fileName.replace(/[^a-zA-Z0-9._-]/g, "_");
+      const path = `custom_${Date.now()}_${sanitizedName}`;
+
+      const { data, error } = await supabase.storage
+        .from("ssc-banners")
+        .upload(path, file, {
+          contentType,
+          upsert: true
+        });
+
+      if (error) {
+        console.error("[AdminApi] uploadBannerImage error:", error);
+        return { success: false, error: error.message };
+      }
+
+      const { data: publicData } = supabase.storage
+        .from("ssc-banners")
+        .getPublicUrl(data.path);
+
+      return {
+        success: true,
+        publicUrl: publicData.publicUrl,
+        storagePath: data.path
+      };
+    } catch (err: any) {
+      console.error("[AdminApi] uploadBannerImage exception:", err);
+      return { success: false, error: err?.message || "Failed to upload banner image." };
     }
   }
 };
