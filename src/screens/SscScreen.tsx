@@ -49,15 +49,23 @@ import {
   Map,
   Compass,
   Radio,
-  FileText
+  FileText,
+  ShieldAlert,
+  Terminal,
+  PauseCircle,
+  PlayCircle,
+  Ban
 } from "lucide-react-native";
 import {
   AdminApi,
   SscConsumer,
   SscBanner,
   SsmMerchant,
-  ApprovedSsmBannerItem
+  ApprovedSsmBannerItem,
+  SudoActionType,
+  SudoActionResult
 } from "../api/adminApi";
+import { SudoConfirmationModal, SudoTarget } from "../components/SudoConfirmationModal";
 
 interface SscScreenProps {
   isDark?: boolean;
@@ -160,6 +168,11 @@ export const SscScreen: React.FC<SscScreenProps> = ({ isDark = false }) => {
   const [refreshing, setRefreshing] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [selectedConsumer, setSelectedConsumer] = useState<SscConsumer | null>(null);
+
+  // SUDO User Management Modal State
+  const [sudoTarget, setSudoTarget] = useState<SudoTarget | null>(null);
+  const [sudoAction, setSudoAction] = useState<SudoActionType | null>(null);
+  const [sudoModalVisible, setSudoModalVisible] = useState(false);
 
   // ============================================================================
   // 2. Banner Management State
@@ -398,19 +411,55 @@ export const SscScreen: React.FC<SscScreenProps> = ({ isDark = false }) => {
     setPage(1);
   };
 
+  const handleOpenSudoAction = (consumer: SscConsumer, act: SudoActionType) => {
+    setSudoTarget({
+      id: consumer.id,
+      name: consumer.name,
+      identifier: consumer.customerId,
+      scope: "ss",
+      currentStatus: consumer.accountStatus,
+      phone: consumer.phone,
+      email: consumer.email
+    });
+    setSudoAction(act);
+    setSudoModalVisible(true);
+  };
+
+  const handleSudoSuccess = (result: SudoActionResult) => {
+    loadConsumers(false, true);
+    if (selectedConsumer && selectedConsumer.id === result.auth_user_id) {
+      setSelectedConsumer((prev) =>
+        prev
+          ? {
+              ...prev,
+              accountStatus: (result.new_status?.toLowerCase() || prev.accountStatus) as any
+            }
+          : null
+      );
+    }
+  };
+
   const renderStatusBadge = (status: string) => {
     let bg = colors.badgeInactiveBg;
     let text = colors.badgeInactiveText;
-    let label = "INACTIVE";
+    let label = (status || "INACTIVE").toUpperCase();
 
     if (status === "active") {
       bg = colors.badgeActiveBg;
       text = colors.badgeActiveText;
       label = "ACTIVE";
+    } else if (status === "suspended") {
+      bg = isDark ? "#451A03" : "#FEF3C7";
+      text = isDark ? "#FBBF24" : "#D97706";
+      label = "SUSPENDED";
     } else if (status === "banned") {
       bg = colors.badgeBannedBg;
       text = colors.badgeBannedText;
       label = "BANNED";
+    } else if (status === "deleted") {
+      bg = isDark ? "#1E293B" : "#F1F5F9";
+      text = isDark ? "#64748B" : "#475569";
+      label = "DELETED";
     }
 
     return (
@@ -500,6 +549,15 @@ export const SscScreen: React.FC<SscScreenProps> = ({ isDark = false }) => {
             </View>
             <Text style={[styles.dateValue, { color: colors.textMain }]}>{item.lastActiveDate}</Text>
           </View>
+        </View>
+
+        {/* Quick SUDO Management Footer */}
+        <View style={[styles.cardSudoFooter, { borderTopColor: colors.border }]}>
+          <View style={{ flexDirection: "row", alignItems: "center" }}>
+            <Terminal size={12} color="#EA580C" style={{ marginRight: 5 }} />
+            <Text style={styles.cardSudoFooterHint}>SUDO Management & Profile Dossier</Text>
+          </View>
+          <ChevronRight size={14} color="#EA580C" />
         </View>
       </TouchableOpacity>
     );
@@ -2743,6 +2801,81 @@ export const SscScreen: React.FC<SscScreenProps> = ({ isDark = false }) => {
                   </View>
                 </View>
 
+                {/* Section: SUDO Administrative Controls */}
+                <Text style={[styles.sectionHeading, { color: colors.textSub, marginTop: 18 }]}>
+                  SUDO ADMINISTRATIVE COMMAND CONTROLS
+                </Text>
+                <View style={[styles.sudoControlsBlock, { borderColor: isDark ? "#334155" : "#E2E8F0", backgroundColor: isDark ? "#0F172A" : "#F8FAFC" }]}>
+                  <View style={styles.sudoControlsHeader}>
+                    <Terminal size={14} color="#EA580C" style={{ marginRight: 6 }} />
+                    <Text style={[styles.sudoControlsHeaderTitle, { color: colors.textMain }]}>
+                      Scope: SSC (Consumer) • Authorized Super Admin Action
+                    </Text>
+                  </View>
+                  <Text style={[styles.sudoControlsSub, { color: colors.textSub }]}>
+                    Privileged action execution requires server-side SUDO command validation.
+                  </Text>
+
+                  <View style={styles.sudoBtnRow}>
+                    {/* Suspend / Restore button */}
+                    {selectedConsumer.accountStatus === "suspended" ? (
+                      <TouchableOpacity
+                        style={[styles.sudoActionBtn, { backgroundColor: "#16A34A" }]}
+                        onPress={() => handleOpenSudoAction(selectedConsumer, "restore")}
+                      >
+                        <PlayCircle size={14} color="#FFFFFF" style={{ marginRight: 5 }} />
+                        <Text style={styles.sudoActionBtnText}>Restore Access</Text>
+                      </TouchableOpacity>
+                    ) : selectedConsumer.accountStatus !== "deleted" && selectedConsumer.accountStatus !== "banned" ? (
+                      <TouchableOpacity
+                        style={[styles.sudoActionBtn, { backgroundColor: "#D97706" }]}
+                        onPress={() => handleOpenSudoAction(selectedConsumer, "suspend")}
+                      >
+                        <PauseCircle size={14} color="#FFFFFF" style={{ marginRight: 5 }} />
+                        <Text style={styles.sudoActionBtnText}>Suspend User</Text>
+                      </TouchableOpacity>
+                    ) : null}
+
+                    {/* Ban / Unban button */}
+                    {selectedConsumer.accountStatus === "banned" ? (
+                      <TouchableOpacity
+                        style={[styles.sudoActionBtn, { backgroundColor: "#16A34A" }]}
+                        onPress={() => handleOpenSudoAction(selectedConsumer, "unban")}
+                      >
+                        <ShieldCheck size={14} color="#FFFFFF" style={{ marginRight: 5 }} />
+                        <Text style={styles.sudoActionBtnText}>Unban Account</Text>
+                      </TouchableOpacity>
+                    ) : selectedConsumer.accountStatus !== "deleted" ? (
+                      <TouchableOpacity
+                        style={[styles.sudoActionBtn, { backgroundColor: "#DC2626" }]}
+                        onPress={() => handleOpenSudoAction(selectedConsumer, "ban")}
+                      >
+                        <Ban size={14} color="#FFFFFF" style={{ marginRight: 5 }} />
+                        <Text style={styles.sudoActionBtnText}>Ban User</Text>
+                      </TouchableOpacity>
+                    ) : null}
+
+                    {/* Delete button */}
+                    {selectedConsumer.accountStatus !== "deleted" && (
+                      <TouchableOpacity
+                        style={[styles.sudoActionBtn, { backgroundColor: "#7F1D1D" }]}
+                        onPress={() => handleOpenSudoAction(selectedConsumer, "delete")}
+                      >
+                        <Trash2 size={14} color="#FFFFFF" style={{ marginRight: 5 }} />
+                        <Text style={styles.sudoActionBtnText}>Delete User</Text>
+                      </TouchableOpacity>
+                    )}
+
+                    {selectedConsumer.accountStatus === "deleted" && (
+                      <View style={[styles.deletedNoticePill, { backgroundColor: isDark ? "#1E293B" : "#F1F5F9" }]}>
+                        <Text style={[styles.deletedNoticeText, { color: colors.textSub }]}>
+                          Account is in Soft-Deletion state (retained for statutory audit)
+                        </Text>
+                      </View>
+                    )}
+                  </View>
+                </View>
+
                 {/* System ID Metadata */}
                 <View style={styles.systemMetadataBox}>
                   <Text style={[styles.systemMetaText, { color: colors.textSub }]}>
@@ -2764,6 +2897,15 @@ export const SscScreen: React.FC<SscScreenProps> = ({ isDark = false }) => {
           </View>
         </View>
       </Modal>
+
+      {/* Universal SUDO User Management Confirmation Modal */}
+      <SudoConfirmationModal
+        visible={sudoModalVisible}
+        onClose={() => setSudoModalVisible(false)}
+        onSuccess={handleSudoSuccess}
+        target={sudoTarget}
+        action={sudoAction}
+      />
     </View>
   );
 };
@@ -3754,6 +3896,65 @@ const styles = StyleSheet.create({
   systemMetaText: {
     fontSize: 9,
     fontFamily: Platform.OS === "ios" ? "Courier" : "monospace"
+  },
+  cardSudoFooter: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingTop: 8,
+    marginTop: 8,
+    borderTopWidth: 1
+  },
+  cardSudoFooterHint: {
+    fontSize: 11,
+    fontWeight: "600",
+    color: "#EA580C"
+  },
+  sudoControlsBlock: {
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 14
+  },
+  sudoControlsHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 4
+  },
+  sudoControlsHeaderTitle: {
+    fontSize: 12,
+    fontWeight: "700"
+  },
+  sudoControlsSub: {
+    fontSize: 11,
+    marginBottom: 12
+  },
+  sudoBtnRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8
+  },
+  sudoActionBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 7
+  },
+  sudoActionBtnText: {
+    color: "#FFFFFF",
+    fontSize: 11,
+    fontWeight: "700"
+  },
+  deletedNoticePill: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8
+  },
+  deletedNoticeText: {
+    fontSize: 11,
+    fontStyle: "italic",
+    fontWeight: "600"
   },
   modalFooter: {
     paddingHorizontal: 18,

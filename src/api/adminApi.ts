@@ -83,7 +83,7 @@ export interface SscConsumer {
   registrationTimestamp?: string;
   lastActiveDate: string;
   lastActiveTimestamp?: string;
-  accountStatus: "active" | "inactive" | "banned" | "deleted";
+  accountStatus: "active" | "inactive" | "banned" | "deleted" | "suspended";
   referralCode?: string;
   referredByCode?: string;
 }
@@ -99,6 +99,53 @@ export interface SsmMerchant {
   subscriptionPlan: string;
   subscriptionExpiry: string | null;
   referralCode?: string;
+  ownerId?: string;
+  status?: "active" | "suspended" | "banned" | "deleted";
+}
+
+export type SudoActionType = "suspend" | "ban" | "delete" | "restore" | "unban";
+export type SudoScopeType = "ss" | "ssm";
+
+export interface SudoActionPayload {
+  action: SudoActionType;
+  scope: SudoScopeType;
+  command: string;
+  targetId: string;
+  reason?: string;
+  adminId?: string;
+  adminEmail?: string;
+}
+
+export interface SudoActionResult {
+  success: boolean;
+  error?: string;
+  audit_id?: string;
+  action?: string;
+  scope?: string;
+  target_app?: string;
+  target_id?: string;
+  auth_user_id?: string;
+  previous_status?: string;
+  new_status?: string;
+  command?: string;
+  reason?: string;
+  timestamp?: string;
+}
+
+export interface SudoAuditLog {
+  id: string;
+  adminId: string;
+  adminEmail: string | null;
+  targetUserId: string;
+  targetApp: "SSC" | "SSM";
+  action: SudoActionType;
+  command: string;
+  previousStatus: string;
+  newStatus: string;
+  reason: string | null;
+  executionResult: "SUCCESS" | "FAILED";
+  errorMessage: string | null;
+  createdAt: string;
 }
 
 export interface SsdApplication {
@@ -591,7 +638,9 @@ export const AdminApi = {
           totalCatalogItems: catalogCount,
           subscriptionPlan: store.subscription_plan || "FREE",
           subscriptionExpiry: store.subscription_status === "active" ? "Active (Perpetual)" : "Expired",
-          referralCode: store.referral_code || "—"
+          referralCode: store.referral_code || "—",
+          ownerId: store.owner_id || undefined,
+          status: (store.subscription_status || "active") as "active" | "suspended" | "banned" | "deleted"
         };
       });
 
@@ -1952,6 +2001,62 @@ export const AdminApi = {
     } catch (err: any) {
       console.error("[AdminApi] uploadBannerImage exception:", err);
       return { success: false, error: err?.message || "Failed to upload banner image." };
+    }
+  },
+
+  /**
+   * Execute privileged SUDO user action via backend RPC
+   */
+  async executeSudoAction(payload: SudoActionPayload): Promise<SudoActionResult> {
+    try {
+      const { data, error } = await supabase.rpc("execute_sudo_user_action", {
+        p_payload: payload
+      });
+
+      if (error) {
+        console.error("[AdminApi] execute_sudo_user_action failed:", error);
+        return { success: false, error: error.message };
+      }
+
+      return data as SudoActionResult;
+    } catch (err: any) {
+      console.error("[AdminApi] executeSudoAction exception:", err);
+      return { success: false, error: err?.message || "Failed to execute SUDO operation." };
+    }
+  },
+
+  /**
+   * Fetch SUDO audit logs
+   */
+  async getSudoAuditLogs(targetId?: string, scope?: string, limit = 20): Promise<SudoAuditLog[]> {
+    try {
+      const { data, error } = await supabase.rpc("get_sudo_audit_logs", {
+        p_target_id: targetId || null,
+        p_scope: scope || null,
+        p_limit: limit
+      });
+
+      if (error) throw error;
+      if (!data) return [];
+
+      return data.map((d: any) => ({
+        id: d.id,
+        adminId: d.admin_id,
+        adminEmail: d.admin_email,
+        targetUserId: d.target_user_id,
+        targetApp: d.target_app,
+        action: d.action,
+        command: d.command,
+        previousStatus: d.previous_status,
+        newStatus: d.new_status,
+        reason: d.reason,
+        executionResult: d.execution_result,
+        errorMessage: d.error_message,
+        createdAt: d.created_at
+      }));
+    } catch (err) {
+      console.warn("[AdminApi] getSudoAuditLogs failed:", err);
+      return [];
     }
   }
 };

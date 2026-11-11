@@ -41,15 +41,24 @@ import {
   ArrowRight,
   ChevronLeft,
   ChevronRight,
-  Info
+  Info,
+  ShieldAlert,
+  Terminal,
+  PauseCircle,
+  PlayCircle,
+  Ban,
+  Trash2
 } from "lucide-react-native";
 import {
   AdminApi,
   SsmMerchant,
   SsmAdApplication,
   BannerSlotControls,
-  BannerDailySlot
+  BannerDailySlot,
+  SudoActionType,
+  SudoActionResult
 } from "../api/adminApi";
+import { SudoConfirmationModal, SudoTarget } from "../components/SudoConfirmationModal";
 
 interface SsmScreenProps {
   isDark?: boolean;
@@ -67,6 +76,29 @@ export const SsmScreen: React.FC<SsmScreenProps> = ({ isDark = false }) => {
   const [searchMerchant, setSearchMerchant] = useState("");
   const [loadingMerchants, setLoadingMerchants] = useState(true);
   const [refreshingMerchants, setRefreshingMerchants] = useState(false);
+
+  // SUDO Merchant Management Modal State
+  const [sudoTarget, setSudoTarget] = useState<SudoTarget | null>(null);
+  const [sudoAction, setSudoAction] = useState<SudoActionType | null>(null);
+  const [sudoModalVisible, setSudoModalVisible] = useState(false);
+
+  const handleOpenMerchantSudoAction = (merchant: SsmMerchant, act: SudoActionType) => {
+    setSudoTarget({
+      id: merchant.id,
+      name: merchant.storeName,
+      identifier: merchant.phone || merchant.id,
+      scope: "ssm",
+      currentStatus: merchant.status || "active",
+      phone: merchant.phone,
+      email: undefined
+    });
+    setSudoAction(act);
+    setSudoModalVisible(true);
+  };
+
+  const handleSudoMerchantSuccess = (result: SudoActionResult) => {
+    loadMerchants(true);
+  };
 
   // ============================================================================
   // Applications Sub-Tab State
@@ -568,6 +600,32 @@ export const SsmScreen: React.FC<SsmScreenProps> = ({ isDark = false }) => {
     );
   });
 
+  const renderMerchantStatusBadge = (status: string) => {
+    let bg = isDark ? "#1E293B" : "#F1F5F9";
+    let text = isDark ? "#94A3B8" : "#64748B";
+    let label = (status || "ACTIVE").toUpperCase();
+
+    if (status === "active") {
+      bg = isDark ? "#064E3B" : "#ECFDF5";
+      text = isDark ? "#34D399" : "#059669";
+    } else if (status === "suspended") {
+      bg = isDark ? "#451A03" : "#FEF3C7";
+      text = isDark ? "#FBBF24" : "#D97706";
+    } else if (status === "banned") {
+      bg = isDark ? "#450A0A" : "#FEE2E2";
+      text = isDark ? "#F87171" : "#DC2626";
+    } else if (status === "deleted") {
+      bg = isDark ? "#1E293B" : "#F1F5F9";
+      text = isDark ? "#64748B" : "#475569";
+    }
+
+    return (
+      <View style={[styles.merchantStatusBadge, { backgroundColor: bg }]}>
+        <Text style={[styles.merchantStatusBadgeText, { color: text }]}>{label}</Text>
+      </View>
+    );
+  };
+
   // Render Merchant Item (Manage Sub-Tab) - 100% Preserved
   const renderMerchantItem = ({ item }: { item: SsmMerchant }) => (
     <View style={[styles.card, { backgroundColor: colors.cardBg, borderColor: colors.border }]}>
@@ -590,9 +648,12 @@ export const SsmScreen: React.FC<SsmScreenProps> = ({ isDark = false }) => {
           </View>
         </View>
 
-        <View style={[styles.planBadge, { backgroundColor: "#FFF7ED" }]}>
-          <CreditCard size={11} color="#EA580C" style={{ marginRight: 3 }} />
-          <Text style={styles.planText}>{item.subscriptionPlan}</Text>
+        <View style={{ alignItems: "flex-end" }}>
+          {renderMerchantStatusBadge(item.status || "active")}
+          <View style={[styles.planBadge, { backgroundColor: "#FFF7ED", marginTop: 4 }]}>
+            <CreditCard size={11} color="#EA580C" style={{ marginRight: 3 }} />
+            <Text style={styles.planText}>{item.subscriptionPlan}</Text>
+          </View>
         </View>
       </View>
 
@@ -637,6 +698,68 @@ export const SsmScreen: React.FC<SsmScreenProps> = ({ isDark = false }) => {
             {item.subscriptionExpiry}
           </Text>
           <Text style={[styles.statHint, { color: colors.textSub }]}>Current validity</Text>
+        </View>
+      </View>
+
+      {/* SUDO Merchant Administrative Action Controls */}
+      <View style={[styles.merchantSudoRow, { borderTopColor: colors.border }]}>
+        <View style={{ flexDirection: "row", alignItems: "center" }}>
+          <Terminal size={12} color="#EA580C" style={{ marginRight: 5 }} />
+          <Text style={styles.merchantSudoLabel}>SUDO Control:</Text>
+        </View>
+
+        <View style={styles.merchantSudoBtnGroup}>
+          {item.status === "suspended" ? (
+            <TouchableOpacity
+              style={[styles.merchantSudoBtn, { backgroundColor: "#16A34A" }]}
+              onPress={() => handleOpenMerchantSudoAction(item, "restore")}
+            >
+              <PlayCircle size={12} color="#FFFFFF" style={{ marginRight: 3 }} />
+              <Text style={styles.merchantSudoBtnText}>Restore</Text>
+            </TouchableOpacity>
+          ) : item.status !== "deleted" && item.status !== "banned" ? (
+            <TouchableOpacity
+              style={[styles.merchantSudoBtn, { backgroundColor: "#D97706" }]}
+              onPress={() => handleOpenMerchantSudoAction(item, "suspend")}
+            >
+              <PauseCircle size={12} color="#FFFFFF" style={{ marginRight: 3 }} />
+              <Text style={styles.merchantSudoBtnText}>Suspend</Text>
+            </TouchableOpacity>
+          ) : null}
+
+          {item.status === "banned" ? (
+            <TouchableOpacity
+              style={[styles.merchantSudoBtn, { backgroundColor: "#16A34A" }]}
+              onPress={() => handleOpenMerchantSudoAction(item, "unban")}
+            >
+              <ShieldCheck size={12} color="#FFFFFF" style={{ marginRight: 3 }} />
+              <Text style={styles.merchantSudoBtnText}>Unban</Text>
+            </TouchableOpacity>
+          ) : item.status !== "deleted" ? (
+            <TouchableOpacity
+              style={[styles.merchantSudoBtn, { backgroundColor: "#DC2626" }]}
+              onPress={() => handleOpenMerchantSudoAction(item, "ban")}
+            >
+              <Ban size={12} color="#FFFFFF" style={{ marginRight: 3 }} />
+              <Text style={styles.merchantSudoBtnText}>Ban</Text>
+            </TouchableOpacity>
+          ) : null}
+
+          {item.status !== "deleted" && (
+            <TouchableOpacity
+              style={[styles.merchantSudoBtn, { backgroundColor: "#7F1D1D" }]}
+              onPress={() => handleOpenMerchantSudoAction(item, "delete")}
+            >
+              <Trash2 size={12} color="#FFFFFF" style={{ marginRight: 3 }} />
+              <Text style={styles.merchantSudoBtnText}>Delete</Text>
+            </TouchableOpacity>
+          )}
+
+          {item.status === "deleted" && (
+            <Text style={{ fontSize: 11, fontStyle: "italic", color: colors.textSub }}>
+              Soft-Deleted (Audited)
+            </Text>
+          )}
         </View>
       </View>
     </View>
@@ -1813,6 +1936,15 @@ export const SsmScreen: React.FC<SsmScreenProps> = ({ isDark = false }) => {
           </View>
         </Modal>
       )}
+
+      {/* Universal SUDO Merchant Management Confirmation Modal */}
+      <SudoConfirmationModal
+        visible={sudoModalVisible}
+        onClose={() => setSudoModalVisible(false)}
+        onSuccess={handleSudoMerchantSuccess}
+        target={sudoTarget}
+        action={sudoAction}
+      />
     </View>
   );
 };
@@ -2057,6 +2189,46 @@ const styles = StyleSheet.create({
   },
   planText: {
     fontSize: 11,
+    fontWeight: "700"
+  },
+  merchantStatusBadge: {
+    paddingHorizontal: 7,
+    paddingVertical: 2.5,
+    borderRadius: 5
+  },
+  merchantStatusBadgeText: {
+    fontSize: 10,
+    fontWeight: "800",
+    letterSpacing: 0.3
+  },
+  merchantSudoRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderTopWidth: 1
+  },
+  merchantSudoLabel: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: "#EA580C"
+  },
+  merchantSudoBtnGroup: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6
+  },
+  merchantSudoBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 5
+  },
+  merchantSudoBtnText: {
+    color: "#FFFFFF",
+    fontSize: 10,
     fontWeight: "700"
   },
   phoneRow: {
