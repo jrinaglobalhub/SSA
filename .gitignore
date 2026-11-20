@@ -1,7 +1,9 @@
 node_modules/
 .expo/
 dist/
+dist-electron/
 build/
+supabase/.temp/
 android/app/build/
 android/.gradle/
 windows/SSA/bin/
