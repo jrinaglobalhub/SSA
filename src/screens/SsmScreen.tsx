@@ -47,7 +47,9 @@ import {
   PauseCircle,
   PlayCircle,
   Ban,
-  Trash2
+  Trash2,
+  ChevronDown,
+  Crown
 } from "lucide-react-native";
 import {
   AdminApi,
@@ -56,9 +58,11 @@ import {
   BannerSlotControls,
   BannerDailySlot,
   SudoActionType,
-  SudoActionResult
+  SudoActionResult,
+  OverrideStorePlanResult
 } from "../api/adminApi";
 import { SudoConfirmationModal, SudoTarget } from "../components/SudoConfirmationModal";
+import { StorePlanModal } from "../components/StorePlanModal";
 
 interface SsmScreenProps {
   isDark?: boolean;
@@ -97,6 +101,19 @@ export const SsmScreen: React.FC<SsmScreenProps> = ({ isDark = false }) => {
   };
 
   const handleSudoMerchantSuccess = (result: SudoActionResult) => {
+    loadMerchants(true);
+  };
+
+  // Store Subscription Plan Management Modal State
+  const [planTargetStore, setPlanTargetStore] = useState<SsmMerchant | null>(null);
+  const [planModalVisible, setPlanModalVisible] = useState(false);
+
+  const handleOpenStorePlanModal = (merchant: SsmMerchant) => {
+    setPlanTargetStore(merchant);
+    setPlanModalVisible(true);
+  };
+
+  const handleStorePlanSuccess = (result: OverrideStorePlanResult) => {
     loadMerchants(true);
   };
 
@@ -650,10 +667,61 @@ export const SsmScreen: React.FC<SsmScreenProps> = ({ isDark = false }) => {
 
         <View style={{ alignItems: "flex-end" }}>
           {renderMerchantStatusBadge(item.status || "active")}
-          <View style={[styles.planBadge, { backgroundColor: "#FFF7ED", marginTop: 4 }]}>
-            <CreditCard size={11} color="#EA580C" style={{ marginRight: 3 }} />
-            <Text style={styles.planText}>{item.subscriptionPlan}</Text>
-          </View>
+          <TouchableOpacity
+            style={[
+              styles.planDropdownBadge,
+              {
+                backgroundColor:
+                  item.subscriptionPlan === "PREMIUM"
+                    ? isDark ? "#2E1065" : "#F5F3FF"
+                    : item.subscriptionPlan === "PRO" || item.subscriptionPlan.startsWith("PRO_")
+                    ? isDark ? "#172554" : "#EFF6FF"
+                    : isDark ? "#1E293B" : "#F8FAFC",
+                borderColor:
+                  item.subscriptionPlan === "PREMIUM"
+                    ? isDark ? "#7C3AED" : "#C4B5FD"
+                    : item.subscriptionPlan === "PRO" || item.subscriptionPlan.startsWith("PRO_")
+                    ? isDark ? "#2563EB" : "#BFDBFE"
+                    : colors.border
+              }
+            ]}
+            onPress={() => handleOpenStorePlanModal(item)}
+            activeOpacity={0.7}
+          >
+            {item.subscriptionPlan === "PREMIUM" ? (
+              <Crown size={11} color="#7C3AED" style={{ marginRight: 3 }} />
+            ) : item.subscriptionPlan === "PRO" || item.subscriptionPlan.startsWith("PRO_") ? (
+              <CreditCard size={11} color="#2563EB" style={{ marginRight: 3 }} />
+            ) : (
+              <CreditCard size={11} color="#64748B" style={{ marginRight: 3 }} />
+            )}
+            <Text
+              style={[
+                styles.planText,
+                {
+                  color:
+                    item.subscriptionPlan === "PREMIUM"
+                      ? isDark ? "#C4B5FD" : "#7C3AED"
+                      : item.subscriptionPlan === "PRO" || item.subscriptionPlan.startsWith("PRO_")
+                      ? isDark ? "#93C5FD" : "#2563EB"
+                      : colors.textSub
+                }
+              ]}
+            >
+              {item.subscriptionPlan}
+            </Text>
+            <ChevronDown
+              size={12}
+              color={
+                item.subscriptionPlan === "PREMIUM"
+                  ? "#7C3AED"
+                  : item.subscriptionPlan === "PRO" || item.subscriptionPlan.startsWith("PRO_")
+                  ? "#2563EB"
+                  : colors.textSub
+              }
+              style={{ marginLeft: 3 }}
+            />
+          </TouchableOpacity>
         </View>
       </View>
 
@@ -709,6 +777,15 @@ export const SsmScreen: React.FC<SsmScreenProps> = ({ isDark = false }) => {
         </View>
 
         <View style={styles.merchantSudoBtnGroup}>
+          {/* Plan Override Control */}
+          <TouchableOpacity
+            style={[styles.merchantSudoBtn, { backgroundColor: "#7C3AED" }]}
+            onPress={() => handleOpenStorePlanModal(item)}
+          >
+            <Crown size={12} color="#FFFFFF" style={{ marginRight: 3 }} />
+            <Text style={styles.merchantSudoBtnText}>Plan</Text>
+          </TouchableOpacity>
+
           {item.status === "suspended" ? (
             <TouchableOpacity
               style={[styles.merchantSudoBtn, { backgroundColor: "#16A34A" }]}
@@ -1945,6 +2022,14 @@ export const SsmScreen: React.FC<SsmScreenProps> = ({ isDark = false }) => {
         target={sudoTarget}
         action={sudoAction}
       />
+
+      {/* Store Subscription Plan Management Modal */}
+      <StorePlanModal
+        visible={planModalVisible}
+        onClose={() => setPlanModalVisible(false)}
+        onSuccess={handleStorePlanSuccess}
+        store={planTargetStore}
+      />
     </View>
   );
 };
@@ -2186,6 +2271,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 6
+  },
+  planDropdownBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    borderWidth: 1,
+    marginTop: 4
   },
   planText: {
     fontSize: 11,

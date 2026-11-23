@@ -98,9 +98,35 @@ export interface SsmMerchant {
   totalCatalogItems: number;
   subscriptionPlan: string;
   subscriptionExpiry: string | null;
+  subscriptionExpiresAt?: string | null;
   referralCode?: string;
   ownerId?: string;
   status?: "active" | "suspended" | "banned" | "deleted";
+}
+
+export type StorePlanType = "FREE" | "PRO" | "PREMIUM";
+
+export interface OverrideStorePlanPayload {
+  storeId: string;
+  plan: StorePlanType;
+  durationDays: number;
+  durationLabel: string;
+  command: string;
+  reason?: string;
+  adminId?: string;
+  adminEmail?: string;
+}
+
+export interface OverrideStorePlanResult {
+  success: boolean;
+  error?: string;
+  message?: string;
+  storeId?: string;
+  storeName?: string;
+  subscriptionPlan?: string;
+  subscriptionStatus?: string;
+  subscriptionExpiresAt?: string | null;
+  durationLabel?: string;
 }
 
 export type SudoActionType = "suspend" | "ban" | "delete" | "restore" | "unban";
@@ -590,7 +616,7 @@ export const AdminApi = {
     try {
       let query = supabase
         .from("stores")
-        .select("id, name, address, phone, subscription_plan, subscription_status, created_at, referral_code, owner_id", { count: "exact" })
+        .select("id, name, address, phone, subscription_plan, subscription_status, subscription_expires_at, created_at, referral_code, owner_id", { count: "exact" })
         .order("created_at", { ascending: false });
 
       const cleanSearch = search.trim();
@@ -657,6 +683,28 @@ export const AdminApi = {
           catalogByStore[strippedId] ||
           0;
 
+        let expiryDisplay = "Active (Lifetime)";
+        if (store.subscription_expires_at) {
+          const expDate = new Date(store.subscription_expires_at);
+          const nowTime = new Date().getTime();
+          const isPast = expDate.getTime() < nowTime;
+          const daysRemaining = Math.max(0, Math.ceil((expDate.getTime() - nowTime) / (1000 * 60 * 60 * 24)));
+          const formattedDate = expDate.toLocaleDateString("en-IN", {
+            day: "numeric",
+            month: "short",
+            year: "numeric"
+          });
+          if (isPast) {
+            expiryDisplay = `Expired (${formattedDate})`;
+          } else {
+            expiryDisplay = `${formattedDate} (${daysRemaining}d left)`;
+          }
+        } else if (store.subscription_status === "active") {
+          expiryDisplay = "Active (Lifetime)";
+        } else {
+          expiryDisplay = "Inactive";
+        }
+
         return {
           id: store.id,
           storeName: store.name || "Untitled Store",
@@ -665,8 +713,9 @@ export const AdminApi = {
           state,
           offersLastMonth: offersCount,
           totalCatalogItems: catalogCount,
-          subscriptionPlan: store.subscription_plan || "FREE",
-          subscriptionExpiry: store.subscription_status === "active" ? "Active (Perpetual)" : "Expired",
+          subscriptionPlan: (store.subscription_plan || "FREE").toUpperCase(),
+          subscriptionExpiry: expiryDisplay,
+          subscriptionExpiresAt: store.subscription_expires_at || null,
           referralCode: store.referral_code || "—",
           ownerId: store.owner_id || undefined,
           status: (store.subscription_status || "active") as "active" | "suspended" | "banned" | "deleted"
@@ -2278,6 +2327,27 @@ export const AdminApi = {
     } catch (err: any) {
       console.error("[AdminApi] executeSudoAction exception:", err);
       return { success: false, error: err?.message || "Failed to execute SUDO operation." };
+    }
+  },
+
+  /**
+   * Override Store Subscription Plan with SUDO verification
+   */
+  async overrideStorePlan(payload: OverrideStorePlanPayload): Promise<OverrideStorePlanResult> {
+    try {
+      const { data, error } = await supabase.rpc("admin_override_store_plan", {
+        p_payload: payload
+      });
+
+      if (error) {
+        console.error("[AdminApi] admin_override_store_plan failed:", error);
+        return { success: false, error: error.message };
+      }
+
+      return data as OverrideStorePlanResult;
+    } catch (err: any) {
+      console.error("[AdminApi] overrideStorePlan exception:", err);
+      return { success: false, error: err?.message || "Failed to update store plan." };
     }
   },
 
