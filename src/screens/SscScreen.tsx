@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useRef } from "react";
+import React, { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import {
   View,
   Text,
@@ -54,7 +54,10 @@ import {
   Terminal,
   PauseCircle,
   PlayCircle,
-  Ban
+  Ban,
+  ArrowRight,
+  Sliders,
+  Layout
 } from "lucide-react-native";
 import {
   AdminApi,
@@ -92,6 +95,230 @@ const TARGET_STATES = [
   "Andhra Pradesh",
   "Telangana",
   "All India"
+];
+
+export interface DefaultSystemBanner {
+  id: string;
+  slotKey: string;
+  slotNumber: number;
+  slotName: string;
+  title: string;
+  subtitle: string;
+  badgeText: string;
+  category: string;
+  categoryKey: string;
+  ctaText: string;
+  defaultOrder: number;
+  accentColor: string;
+  badgeBg: string;
+  badgeTextCol: string;
+  bgGradient: string;
+  description: string;
+  placementType: "Hero Carousel" | "Category Feature Slide";
+  defaultTags: string[];
+}
+
+export const DEFAULT_SSC_BANNERS: DefaultSystemBanner[] = [
+  {
+    id: "default_slot_0_hero",
+    slotKey: "hero_spotlight",
+    slotNumber: 1,
+    slotName: "Slot 1: Universal Hero Spotlight",
+    title: "Great Deals. Better Shopping. All Around You!",
+    subtitle: "Discover exciting deals and offers from stores around you.",
+    badgeText: "SMARTSHOPPER SPOTLIGHT",
+    category: "Universal",
+    categoryKey: "DEFAULT",
+    ctaText: "Explore Deals →",
+    defaultOrder: 0,
+    accentColor: "#EA580C",
+    badgeBg: "rgba(255, 255, 255, 0.25)",
+    badgeTextCol: "#FFFFFF",
+    bgGradient: "linear-gradient(135deg, #EA580C 0%, #D94E07 55%, #C2410C 100%)",
+    description: "Primary hero spotlight banner running in the top carousel. Displays by default to all consumers until replaced by a custom hero banner.",
+    placementType: "Hero Carousel",
+    defaultTags: ["Carousel Slide 1", "Universal", "All Shoppers"]
+  },
+  {
+    id: "default_slot_1_groceries",
+    slotKey: "groceries",
+    slotNumber: 2,
+    slotName: "Slot 2: Groceries & Supermarkets",
+    title: "Fresh Daily Essentials & Supermarket Deals",
+    subtitle: "Up to 40% OFF on pantry staples, fresh fruits, vegetables & dairy.",
+    badgeText: "FRESH DAILY DEALS",
+    category: "Grocery",
+    categoryKey: "GROCERIES",
+    ctaText: "Shop Groceries →",
+    defaultOrder: 1,
+    accentColor: "#16A34A",
+    badgeBg: "rgba(255, 255, 255, 0.25)",
+    badgeTextCol: "#FFFFFF",
+    bgGradient: "linear-gradient(135deg, #15803D 0%, #166534 60%, #14532D 100%)",
+    description: "Default promotional slide for grocery, fresh vegetables, dairy, and local supermarket offers.",
+    placementType: "Category Feature Slide",
+    defaultTags: ["Category: Grocery", "Local Supermarkets"]
+  },
+  {
+    id: "default_slot_2_dining",
+    slotKey: "dining",
+    slotNumber: 3,
+    slotName: "Slot 3: Food & Dining Specials",
+    title: "Delicious Dining & Restaurant Offers",
+    subtitle: "Special dining discounts, chef specials & quick bites from top local restaurants.",
+    badgeText: "GOURMET SPECIAL",
+    category: "Dining",
+    categoryKey: "FOOD_DINING",
+    ctaText: "Explore Menus →",
+    defaultOrder: 2,
+    accentColor: "#E11D48",
+    badgeBg: "rgba(255, 255, 255, 0.25)",
+    badgeTextCol: "#FFFFFF",
+    bgGradient: "linear-gradient(135deg, #BE123C 0%, #9F1239 60%, #881337 100%)",
+    description: "Default promotional slide highlighting restaurants, cafes, bakeries, and gourmet dining.",
+    placementType: "Category Feature Slide",
+    defaultTags: ["Category: Dining", "Restaurants & Cafes"]
+  },
+  {
+    id: "default_slot_3_electronics",
+    slotKey: "electronics",
+    slotNumber: 4,
+    slotName: "Slot 4: Electronics & Gadgets",
+    title: "Tech, Smartphones & Home Appliances",
+    subtitle: "Verified deals on smartphones, accessories, gadgets and smart home electronics.",
+    badgeText: "TECH SPOTLIGHT",
+    category: "Electronics",
+    categoryKey: "ELECTRONICS",
+    ctaText: "Browse Gadgets →",
+    defaultOrder: 3,
+    accentColor: "#2563EB",
+    badgeBg: "rgba(255, 255, 255, 0.25)",
+    badgeTextCol: "#FFFFFF",
+    bgGradient: "linear-gradient(135deg, #1D4ED8 0%, #1E40AF 60%, #172554 100%)",
+    description: "Default promotional slide highlighting electronics, mobile devices, computers, and appliances.",
+    placementType: "Category Feature Slide",
+    defaultTags: ["Category: Electronics", "Tech & Gadgets"]
+  },
+  {
+    id: "default_slot_4_fashion",
+    slotKey: "fashion",
+    slotNumber: 5,
+    slotName: "Slot 5: Fashion & Boutiques",
+    title: "Trending Styles & Boutique Collections",
+    subtitle: "Curated festive, casual, and formal fashion collections from local boutiques.",
+    badgeText: "FASHION & APPAREL",
+    category: "Fashion",
+    categoryKey: "FASHION",
+    ctaText: "View Collections →",
+    defaultOrder: 4,
+    accentColor: "#9333EA",
+    badgeBg: "rgba(255, 255, 255, 0.25)",
+    badgeTextCol: "#FFFFFF",
+    bgGradient: "linear-gradient(135deg, #7E22CE 0%, #6B21A8 60%, #581C87 100%)",
+    description: "Default promotional slide highlighting apparel, boutiques, clothing, footwear, and accessories.",
+    placementType: "Category Feature Slide",
+    defaultTags: ["Category: Fashion", "Boutiques & Apparel"]
+  },
+  {
+    id: "default_slot_5_beauty",
+    slotKey: "beauty",
+    slotNumber: 6,
+    slotName: "Slot 6: Beauty, Spa & Salons",
+    title: "Luxury Salons, Spa & Grooming Packages",
+    subtitle: "Pamper yourself with curated salon packages, grooming, and skincare offers.",
+    badgeText: "BEAUTY & SALON",
+    category: "Beauty",
+    categoryKey: "BEAUTY_PERSONAL_CARE",
+    ctaText: "Book Packages →",
+    defaultOrder: 5,
+    accentColor: "#EC4899",
+    badgeBg: "rgba(255, 255, 255, 0.25)",
+    badgeTextCol: "#FFFFFF",
+    bgGradient: "linear-gradient(135deg, #DB2777 0%, #BE185D 60%, #9D174D 100%)",
+    description: "Default promotional slide highlighting beauty salons, spas, grooming centers, and cosmetic stores.",
+    placementType: "Category Feature Slide",
+    defaultTags: ["Category: Beauty", "Salons & Spas"]
+  },
+  {
+    id: "default_slot_6_home_living",
+    slotKey: "home_living",
+    slotNumber: 7,
+    slotName: "Slot 7: Home & Living Decor",
+    title: "Furniture, Decor & Kitchen Upgrades",
+    subtitle: "Transform your living spaces with deals on home decor, furnishing, and kitchenware.",
+    badgeText: "HOME & LIVING",
+    category: "Home & Living",
+    categoryKey: "HOME_LIVING",
+    ctaText: "Discover Home Deals →",
+    defaultOrder: 6,
+    accentColor: "#D97706",
+    badgeBg: "rgba(255, 255, 255, 0.25)",
+    badgeTextCol: "#FFFFFF",
+    bgGradient: "linear-gradient(135deg, #B45309 0%, #92400E 60%, #78350F 100%)",
+    description: "Default promotional slide highlighting furniture, interior decor, kitchenware, and furnishing.",
+    placementType: "Category Feature Slide",
+    defaultTags: ["Category: Home & Living", "Furnishing & Decor"]
+  },
+  {
+    id: "default_slot_7_it_services",
+    slotKey: "it_services",
+    slotNumber: 8,
+    slotName: "Slot 8: IT & Digital Services",
+    title: "Digital Services, Repairs & Software Solutions",
+    subtitle: "Laptop/computer servicing, mobile repairs, IT support & custom software services.",
+    badgeText: "DIGITAL SERVICES",
+    category: "IT & Services",
+    categoryKey: "IT_SERVICES",
+    ctaText: "Get Servicing →",
+    defaultOrder: 7,
+    accentColor: "#0D9488",
+    badgeBg: "rgba(255, 255, 255, 0.25)",
+    badgeTextCol: "#FFFFFF",
+    bgGradient: "linear-gradient(135deg, #0F766E 0%, #115E59 60%, #134E4A 100%)",
+    description: "Default promotional slide highlighting IT repair shops, mobile servicing, and digital solutions.",
+    placementType: "Category Feature Slide",
+    defaultTags: ["Category: IT & Services", "Tech Repair & Software"]
+  },
+  {
+    id: "default_slot_8_wellness",
+    slotKey: "wellness",
+    slotNumber: 9,
+    slotName: "Slot 9: Wellness & Health",
+    title: "Health, Fitness & Pharmacy Offers",
+    subtitle: "Gym memberships, healthcare checkups, diagnostic discounts & pharmacy deals.",
+    badgeText: "HEALTH & WELLNESS",
+    category: "Wellness",
+    categoryKey: "WELLNESS",
+    ctaText: "Explore Wellness →",
+    defaultOrder: 8,
+    accentColor: "#059669",
+    badgeBg: "rgba(255, 255, 255, 0.25)",
+    badgeTextCol: "#FFFFFF",
+    bgGradient: "linear-gradient(135deg, #047857 0%, #065F46 60%, #064E3B 100%)",
+    description: "Default promotional slide highlighting gyms, fitness centers, diagnostic labs, and pharmacies.",
+    placementType: "Category Feature Slide",
+    defaultTags: ["Category: Wellness", "Fitness & Healthcare"]
+  },
+  {
+    id: "default_slot_9_retail",
+    slotKey: "retail",
+    slotNumber: 10,
+    slotName: "Slot 10: Neighborhood Retail Specials",
+    title: "Support Local: Verified Neighborhood Merchants",
+    subtitle: "Exclusive in-store discounts and cashback rewards when shopping at nearby partner stores.",
+    badgeText: "LOCAL EXCLUSIVE",
+    category: "Store Specials",
+    categoryKey: "DEFAULT",
+    ctaText: "Find Local Stores →",
+    defaultOrder: 9,
+    accentColor: "#EA580C",
+    badgeBg: "rgba(255, 255, 255, 0.25)",
+    badgeTextCol: "#FFFFFF",
+    bgGradient: "linear-gradient(135deg, #EA580C 0%, #C2410C 60%, #9A3412 100%)",
+    description: "Default promotional slide promoting local neighborhood partner stores and SmartShopper Pass benefits.",
+    placementType: "Category Feature Slide",
+    defaultTags: ["Local Stores", "SmartShopper Pass"]
+  }
 ];
 
 // Helper: Format ISO date string into Indian Standard Time (IST) readable format
@@ -152,8 +379,8 @@ export const SscScreen: React.FC<SscScreenProps> = ({ isDark = false }) => {
   const [activeSubTab, setActiveSubTab] = useState<"consumers" | "banners">("consumers");
 
   // Secondary Sub-tab inside Banner Management:
-  // 'all' (All Banners) | 'custom' (Custom Banners) | 'ssm_approved' (Approved SSM Banners)
-  const [bannerSection, setBannerSection] = useState<"all" | "custom" | "ssm_approved">("all");
+  // 'all' (All Banners) | 'default' (Default System Banners) | 'custom' (Custom Banners) | 'ssm_approved' (Approved SSM Banners)
+  const [bannerSection, setBannerSection] = useState<"all" | "default" | "custom" | "ssm_approved">("all");
 
   // ============================================================================
   // 1. Consumers Sub-Tab State (100% Preserved)
@@ -256,6 +483,12 @@ export const SscScreen: React.FC<SscScreenProps> = ({ isDark = false }) => {
 
   // Live Phone Mockup Preview Modal State
   const [previewingBanner, setPreviewingBanner] = useState<SscBanner | null>(null);
+  const [previewingDefaultBanner, setPreviewingDefaultBanner] = useState<DefaultSystemBanner | null>(null);
+
+  // Default System Banners Management State
+  const [replacingDefaultBanner, setReplacingDefaultBanner] = useState<DefaultSystemBanner | null>(null);
+  const [defaultBannerFilter, setDefaultBannerFilter] = useState<"all" | "running" | "replaced">("all");
+  const [defaultBannerSearch, setDefaultBannerSearch] = useState("");
 
   const colors = isDark
     ? {
@@ -644,9 +877,87 @@ export const SscScreen: React.FC<SscScreenProps> = ({ isDark = false }) => {
     return { label: "ACTIVE", bg: "#ECFDF5", text: "#059669" };
   };
 
+  // Check if a default system banner is currently replaced by an active custom or SSM banner
+  const getReplacingBanner = useCallback(
+    (defaultBnr: DefaultSystemBanner): SscBanner | null => {
+      // Find active, currently live banners
+      const liveBanners = banners.filter((b) => {
+        if (!b.isActive || b.status !== "active") return false;
+        const startMs = b.startAt ? new Date(b.startAt).getTime() : null;
+        const endMs = b.endAt ? new Date(b.endAt).getTime() : null;
+        if (startMs && startMs > nowTime) return false;
+        if (endMs && endMs < nowTime) return false;
+        return true;
+      });
+
+      // Priority 1: Match on displayOrder
+      const matchedByOrder = liveBanners.find((b) => b.displayOrder === defaultBnr.defaultOrder);
+      if (matchedByOrder) return matchedByOrder;
+
+      // Priority 2: For category slides, match category in redirectTarget or title
+      if (defaultBnr.category && defaultBnr.category !== "Universal") {
+        const matchedByCat = liveBanners.find(
+          (b) =>
+            (b.redirectType === "category" &&
+              b.redirectTarget?.toLowerCase() === defaultBnr.category.toLowerCase()) ||
+            b.title.toLowerCase().includes(defaultBnr.category.toLowerCase())
+        );
+        if (matchedByCat) return matchedByCat;
+      }
+
+      // Priority 3: For universal hero slot 0, if any active banner has displayOrder 0
+      if (defaultBnr.defaultOrder === 0) {
+        const heroBanner = liveBanners.find((b) => b.displayOrder === 0);
+        if (heroBanner) return heroBanner;
+      }
+
+      return null;
+    },
+    [banners, nowTime]
+  );
+
+  // Statistics on default system banners (running vs replaced)
+  const defaultBannerStats = useMemo(() => {
+    let running = 0;
+    let replaced = 0;
+    DEFAULT_SSC_BANNERS.forEach((db) => {
+      const repl = getReplacingBanner(db);
+      if (repl) {
+        replaced++;
+      } else {
+        running++;
+      }
+    });
+    return { running, replaced, total: DEFAULT_SSC_BANNERS.length };
+  }, [getReplacingBanner]);
+
+  // Filter default system banners
+  const filteredDefaultBanners = useMemo(() => {
+    return DEFAULT_SSC_BANNERS.filter((db) => {
+      const repl = getReplacingBanner(db);
+      const isReplaced = !!repl;
+
+      if (defaultBannerFilter === "running" && isReplaced) return false;
+      if (defaultBannerFilter === "replaced" && !isReplaced) return false;
+
+      if (defaultBannerSearch.trim()) {
+        const q = defaultBannerSearch.toLowerCase().trim();
+        const matchTitle = db.title.toLowerCase().includes(q);
+        const matchSlot = db.slotName.toLowerCase().includes(q);
+        const matchCat = db.category.toLowerCase().includes(q);
+        const matchSub = db.subtitle.toLowerCase().includes(q);
+        const matchRepl = repl ? repl.title.toLowerCase().includes(q) : false;
+        return matchTitle || matchSlot || matchCat || matchSub || matchRepl;
+      }
+
+      return true;
+    });
+  }, [defaultBannerFilter, defaultBannerSearch, getReplacingBanner]);
+
   // Open modal to create custom banner
   const openCreateCustomBannerModal = () => {
     setEditingBannerId(null);
+    setReplacingDefaultBanner(null);
     setFormErrors({});
     setUploadProgress(null);
     const nextOrder = banners.length > 0 ? Math.max(...banners.map((b) => b.displayOrder)) + 1 : 0;
@@ -682,9 +993,47 @@ export const SscScreen: React.FC<SscScreenProps> = ({ isDark = false }) => {
     setIsBannerModalOpen(true);
   };
 
+  // Open modal to replace a specific default system banner with a custom banner
+  const handleReplaceDefaultBanner = (defaultBnr: DefaultSystemBanner) => {
+    setEditingBannerId(null);
+    setReplacingDefaultBanner(defaultBnr);
+    setFormErrors({});
+    setUploadProgress(null);
+
+    const now = new Date();
+    const future = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000); // 14 days active window
+
+    setBannerForm({
+      title: defaultBnr.category === "Universal" ? "Special Spotlight Deals" : `${defaultBnr.category} Festive Deals`,
+      subtitle: defaultBnr.subtitle,
+      imageUrl: "",
+      storagePath: "",
+      sourceType: "custom",
+      sourceRequestId: "",
+      merchantId: "",
+      merchantName: "",
+      redirectType: defaultBnr.placementType === "Category Feature Slide" ? "category" : "none",
+      redirectTarget: defaultBnr.category !== "Universal" ? defaultBnr.category : "",
+      status: "active",
+      startAtIST: toInputDateTimeString(now.toISOString()),
+      endAtIST: toInputDateTimeString(future.toISOString()),
+      targetingType: "all",
+      targetState: "Kerala",
+      targetDistrict: "",
+      targetCity: "",
+      targetPincodes: "",
+      targetLatitude: "8.736948",
+      targetLongitude: "77.050640",
+      targetRadiusKm: "10",
+      displayOrder: String(defaultBnr.defaultOrder)
+    });
+    setIsBannerModalOpen(true);
+  };
+
   // Open modal to edit existing banner
   const openEditBannerModal = (banner: SscBanner) => {
     setEditingBannerId(banner.id);
+    setReplacingDefaultBanner(null);
     setFormErrors({});
     setUploadProgress(null);
 
@@ -868,6 +1217,7 @@ export const SscScreen: React.FC<SscScreenProps> = ({ isDark = false }) => {
       const res = await AdminApi.saveSscBanner(payload);
       if (res.success) {
         setIsBannerModalOpen(false);
+        setReplacingDefaultBanner(null);
         loadBannerManagementData();
       } else {
         Alert.alert("Save Error", res.error || "Could not save banner.");
@@ -1272,6 +1622,45 @@ export const SscScreen: React.FC<SscScreenProps> = ({ isDark = false }) => {
             <TouchableOpacity
               style={[
                 styles.secondaryTabBtn,
+                bannerSection === "default" && {
+                  backgroundColor: colors.accent,
+                  borderColor: colors.accent
+                }
+              ]}
+              onPress={() => setBannerSection("default")}
+              activeOpacity={0.8}
+            >
+              <Layout size={13} color={bannerSection === "default" ? "#FFFFFF" : colors.textSub} style={{ marginRight: 6 }} />
+              <Text
+                style={[
+                  styles.secondaryTabText,
+                  { color: bannerSection === "default" ? "#FFFFFF" : colors.textSub }
+                ]}
+              >
+                Default System Banners ({DEFAULT_SSC_BANNERS.length})
+              </Text>
+              <View
+                style={[
+                  styles.tabRunningBadge,
+                  {
+                    backgroundColor: bannerSection === "default" ? "rgba(255,255,255,0.25)" : (isDark ? "#064E3B" : "#ECFDF5")
+                  }
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.tabRunningBadgeText,
+                    { color: bannerSection === "default" ? "#FFFFFF" : "#059669" }
+                  ]}
+                >
+                  {defaultBannerStats.running} Running
+                </Text>
+              </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.secondaryTabBtn,
                 bannerSection === "custom" && {
                   backgroundColor: colors.accent,
                   borderColor: colors.accent
@@ -1319,6 +1708,51 @@ export const SscScreen: React.FC<SscScreenProps> = ({ isDark = false }) => {
             <View style={{ flex: 1 }}>
               {/* Controls Bar */}
               <View style={[styles.controlsBar, { backgroundColor: colors.cardBg, borderColor: colors.border }]}>
+                {/* Default Banner Quick Summary (Shown on All Banners) */}
+                {bannerSection === "all" && (
+                  <View
+                    style={[
+                      styles.defaultSummaryCard,
+                      {
+                        backgroundColor: isDark ? "#1E293B" : "#FFF7ED",
+                        borderColor: isDark ? "#334155" : "#FED7AA"
+                      }
+                    ]}
+                  >
+                    <View style={styles.defaultSummaryLeft}>
+                      <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 2 }}>
+                        <Layout size={14} color="#EA580C" style={{ marginRight: 6 }} />
+                        <Text style={[styles.defaultSummaryTitle, { color: colors.textMain }]}>
+                          SSC Default Banners
+                        </Text>
+                        <View style={[styles.statusBadgeSmall, { backgroundColor: "#ECFDF5", marginLeft: 8 }]}>
+                          <Text style={[styles.statusBadgeSmallText, { color: "#059669" }]}>
+                            {defaultBannerStats.running} RUNNING AS FALLBACK
+                          </Text>
+                        </View>
+                        {defaultBannerStats.replaced > 0 && (
+                          <View style={[styles.statusBadgeSmall, { backgroundColor: "#FAF5FF", marginLeft: 6 }]}>
+                            <Text style={[styles.statusBadgeSmallText, { color: "#7E22CE" }]}>
+                              {defaultBannerStats.replaced} REPLACED
+                            </Text>
+                          </View>
+                        )}
+                      </View>
+                      <Text style={[styles.defaultSummarySub, { color: colors.textSub }]}>
+                        SSC runs 10 default banners across slots and categories when no custom banner is active. Review default banners to know exactly what to replace.
+                      </Text>
+                    </View>
+                    <TouchableOpacity
+                      style={[styles.viewDefaultsBtn, { backgroundColor: colors.accent }]}
+                      onPress={() => setBannerSection("default")}
+                      activeOpacity={0.85}
+                    >
+                      <Text style={styles.viewDefaultsBtnText}>View Default Banners ({DEFAULT_SSC_BANNERS.length})</Text>
+                      <ChevronRight size={13} color="#FFFFFF" style={{ marginLeft: 4 }} />
+                    </TouchableOpacity>
+                  </View>
+                )}
+
                 <View style={[styles.searchBox, { backgroundColor: colors.inputBg, borderColor: colors.border }]}>
                   <Search size={15} color={colors.textSub} style={{ marginRight: 8 }} />
                   <TextInput
@@ -1668,6 +2102,265 @@ export const SscScreen: React.FC<SscScreenProps> = ({ isDark = false }) => {
             </View>
           )}
 
+          {/* Subsection 2: Default System Banners (Currently Running in SSC) */}
+          {bannerSection === "default" && (
+            <View style={{ flex: 1 }}>
+              {/* Controls & Filter Bar */}
+              <View style={[styles.controlsBar, { backgroundColor: colors.cardBg, borderColor: colors.border }]}>
+                <View style={[styles.searchBox, { backgroundColor: colors.inputBg, borderColor: colors.border }]}>
+                  <Search size={15} color={colors.textSub} style={{ marginRight: 8 }} />
+                  <TextInput
+                    style={[styles.searchInput, { color: colors.textMain }]}
+                    placeholder="Search default banners by slot, title, or category..."
+                    placeholderTextColor={colors.textSub}
+                    value={defaultBannerSearch}
+                    onChangeText={setDefaultBannerSearch}
+                    autoCapitalize="none"
+                  />
+                  {defaultBannerSearch.length > 0 && (
+                    <TouchableOpacity onPress={() => setDefaultBannerSearch("")} style={{ padding: 4 }}>
+                      <X size={14} color={colors.textSub} />
+                    </TouchableOpacity>
+                  )}
+                </View>
+
+                <View style={styles.bannerActionsRow}>
+                  <View style={styles.filterPillsRow}>
+                    {[
+                      { id: "all", label: `All Defaults (${DEFAULT_SSC_BANNERS.length})` },
+                      { id: "running", label: `Running Default (${defaultBannerStats.running})` },
+                      { id: "replaced", label: `Replaced by Custom (${defaultBannerStats.replaced})` }
+                    ].map((pill) => {
+                      const isSel = defaultBannerFilter === pill.id;
+                      return (
+                        <TouchableOpacity
+                          key={pill.id}
+                          style={[
+                            styles.filterPill,
+                            { backgroundColor: isSel ? colors.pillActiveBg : colors.pillInactiveBg }
+                          ]}
+                          onPress={() => setDefaultBannerFilter(pill.id as any)}
+                        >
+                          <Text
+                            style={[
+                              styles.filterPillText,
+                              { color: isSel ? colors.pillActiveText : colors.pillInactiveText }
+                            ]}
+                          >
+                            {pill.label}
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+
+                  <View style={styles.defaultHeaderHintBox}>
+                    <Info size={13} color={colors.accent} style={{ marginRight: 6 }} />
+                    <Text style={[styles.defaultHeaderHintText, { color: colors.textSub }]}>
+                      Click &quot;Replace with Custom Banner&quot; on any slot to launch a custom banner for that slot.
+                    </Text>
+                  </View>
+                </View>
+              </View>
+
+              {/* Default Banner Cards Grid */}
+              <ScrollView
+                contentContainerStyle={styles.bannerListContainer}
+                refreshControl={
+                  <RefreshControl
+                    refreshing={refreshingBanners}
+                    onRefresh={() => loadBannerManagementData(true)}
+                    tintColor={colors.accent}
+                  />
+                }
+              >
+                <View style={styles.bannerGrid}>
+                  {filteredDefaultBanners.map((db) => {
+                    const matchedRepl = getReplacingBanner(db);
+                    const isReplaced = !!matchedRepl;
+
+                    return (
+                      <View
+                        key={db.id}
+                        style={[
+                          styles.defaultBannerCard,
+                          {
+                            backgroundColor: colors.cardBg,
+                            borderColor: isReplaced ? (isDark ? "#7E22CE" : "#C084FC") : colors.border
+                          }
+                        ]}
+                      >
+                        {/* Simulated Native SSC Visual Banner Preview */}
+                        <View
+                          style={[
+                            styles.defaultBannerVisualWrap,
+                            {
+                              backgroundColor: db.accentColor,
+                              ...(Platform.OS === "web" ? ({ backgroundImage: db.bgGradient } as any) : {})
+                            }
+                          ]}
+                        >
+                          {/* Overlay Header: Slot Badge & Live Status Badge */}
+                          <View style={styles.defaultBannerVisualHeader}>
+                            <View style={[styles.slotBadge, { backgroundColor: "rgba(15, 23, 42, 0.85)" }]}>
+                              <Text style={styles.slotBadgeText}>
+                                SLOT #{db.slotNumber} &bull; {db.placementType.toUpperCase()}
+                              </Text>
+                            </View>
+
+                            <View
+                              style={[
+                                styles.defaultStatusBadge,
+                                {
+                                  backgroundColor: isReplaced ? "#7E22CE" : "#059669"
+                                }
+                              ]}
+                            >
+                              <Text style={styles.defaultStatusBadgeText}>
+                                {isReplaced ? "REPLACED BY CUSTOM" : "ACTIVE (RUNNING DEFAULT)"}
+                              </Text>
+                            </View>
+                          </View>
+
+                          {/* Simulated Content Layout */}
+                          <View style={styles.defaultBannerVisualBody}>
+                            <View style={[styles.defaultSpotlightTag, { backgroundColor: db.badgeBg }]}>
+                              <Sparkles size={9} color={db.badgeTextCol} style={{ marginRight: 4 }} />
+                              <Text style={[styles.defaultSpotlightText, { color: db.badgeTextCol }]}>
+                                {db.badgeText}
+                              </Text>
+                            </View>
+
+                            <Text style={styles.defaultVisualTitle} numberOfLines={2}>
+                              {db.title}
+                            </Text>
+
+                            <Text style={styles.defaultVisualSub} numberOfLines={2}>
+                              {db.subtitle}
+                            </Text>
+
+                            <View style={styles.defaultVisualCta}>
+                              <Text style={styles.defaultVisualCtaText}>{db.ctaText}</Text>
+                            </View>
+                          </View>
+                        </View>
+
+                        {/* Card Meta & Details */}
+                        <View style={styles.bannerCardContent}>
+                          <View style={styles.defaultCardMetaRow}>
+                            <Text style={[styles.bannerTitleText, { color: colors.textMain }]} numberOfLines={1}>
+                              {db.slotName}
+                            </Text>
+                          </View>
+
+                          <Text style={[styles.bannerSubtitleText, { color: colors.textSub }]} numberOfLines={2}>
+                            {db.description}
+                          </Text>
+
+                          {/* Target Category & Tags */}
+                          <View style={styles.metaBadgesRow}>
+                            <View style={[styles.destBadge, { backgroundColor: colors.inputBg }]}>
+                              <Tag size={10} color={colors.accent} style={{ marginRight: 3 }} />
+                              <Text style={[styles.destBadgeText, { color: colors.textMain, fontWeight: "700" }]}>
+                                Category: {db.category}
+                              </Text>
+                            </View>
+
+                            <View style={[styles.destBadge, { backgroundColor: colors.inputBg }]}>
+                              <Hash size={10} color={colors.textSub} style={{ marginRight: 3 }} />
+                              <Text style={[styles.destBadgeText, { color: colors.textSub }]}>
+                                Priority #{db.defaultOrder}
+                              </Text>
+                            </View>
+                          </View>
+
+                          {/* Current Status Box */}
+                          <View
+                            style={[
+                              styles.defaultStatusBox,
+                              {
+                                backgroundColor: isReplaced
+                                  ? (isDark ? "rgba(126, 34, 206, 0.15)" : "#FAF5FF")
+                                  : (isDark ? "rgba(5, 150, 105, 0.12)" : "#ECFDF5"),
+                                borderColor: isReplaced
+                                  ? (isDark ? "rgba(126, 34, 206, 0.3)" : "#E9D5FF")
+                                  : (isDark ? "rgba(5, 150, 105, 0.3)" : "#A7F3D0")
+                              }
+                            ]}
+                          >
+                            <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 3 }}>
+                              {isReplaced ? (
+                                <RefreshCw size={12} color="#7E22CE" style={{ marginRight: 5 }} />
+                              ) : (
+                                <CheckCircle2 size={12} color="#059669" style={{ marginRight: 5 }} />
+                              )}
+                              <Text
+                                style={[
+                                  styles.defaultStatusBoxTitle,
+                                  { color: isReplaced ? "#7E22CE" : "#059669" }
+                                ]}
+                              >
+                                {isReplaced ? "Replaced by Active Custom Banner" : "Currently Running as Default Fallback"}
+                              </Text>
+                            </View>
+
+                            {isReplaced && matchedRepl ? (
+                              <Text style={[styles.defaultStatusBoxSub, { color: colors.textMain }]} numberOfLines={2}>
+                                Custom Replacement: &quot;{matchedRepl.title}&quot; &bull; Priority #{matchedRepl.displayOrder}
+                                {matchedRepl.merchantName ? ` (${matchedRepl.merchantName})` : ""}
+                              </Text>
+                            ) : (
+                              <Text style={[styles.defaultStatusBoxSub, { color: colors.textSub }]}>
+                                Consumers see this default banner automatically in SSC until an admin creates a custom replacement banner.
+                              </Text>
+                            )}
+                          </View>
+
+                          {/* Action Buttons Row */}
+                          <View style={[styles.bannerActionsBottom, { borderTopColor: colors.border }]}>
+                            <TouchableOpacity
+                              style={[
+                                styles.replaceDefaultBtn,
+                                { backgroundColor: colors.accent }
+                              ]}
+                              onPress={() => handleReplaceDefaultBanner(db)}
+                              activeOpacity={0.84}
+                            >
+                              <Plus size={13} color="#FFFFFF" style={{ marginRight: 5 }} />
+                              <Text style={styles.replaceDefaultBtnText}>
+                                {isReplaced ? "Replace Again" : "Replace with Custom Banner"}
+                              </Text>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                              style={[styles.bannerActionBtn, { borderColor: colors.border, flex: 0, paddingHorizontal: 12 }]}
+                              onPress={() => setPreviewingDefaultBanner(db)}
+                              activeOpacity={0.7}
+                            >
+                              <Eye size={12} color={colors.accent} style={{ marginRight: 4 }} />
+                              <Text style={[styles.bannerActionBtnText, { color: colors.accent }]}>Preview</Text>
+                            </TouchableOpacity>
+
+                            {isReplaced && matchedRepl && (
+                              <TouchableOpacity
+                                style={[styles.bannerActionBtn, { borderColor: colors.border, flex: 0, paddingHorizontal: 10 }]}
+                                onPress={() => openEditBannerModal(matchedRepl)}
+                                activeOpacity={0.7}
+                              >
+                                <Edit3 size={12} color={colors.textMain} style={{ marginRight: 4 }} />
+                                <Text style={[styles.bannerActionBtnText, { color: colors.textMain }]}>Edit Replacement</Text>
+                              </TouchableOpacity>
+                            )}
+                          </View>
+                        </View>
+                      </View>
+                    );
+                  })}
+                </View>
+              </ScrollView>
+            </View>
+          )}
+
           {/* Subsection 3: Approved SSM Banners */}
           {bannerSection === "ssm_approved" && (
             <View style={{ flex: 1 }}>
@@ -1841,7 +2534,10 @@ export const SscScreen: React.FC<SscScreenProps> = ({ isDark = false }) => {
         visible={isBannerModalOpen}
         transparent
         animationType="fade"
-        onRequestClose={() => setIsBannerModalOpen(false)}
+        onRequestClose={() => {
+          setIsBannerModalOpen(false);
+          setReplacingDefaultBanner(null);
+        }}
       >
         <View style={[styles.modalOverlay, { backgroundColor: colors.modalOverlay }]}>
           <View style={[styles.bannerModalCard, { backgroundColor: colors.cardBg, borderColor: colors.border }]}>
@@ -1849,18 +2545,50 @@ export const SscScreen: React.FC<SscScreenProps> = ({ isDark = false }) => {
               <View style={{ flexDirection: "row", alignItems: "center" }}>
                 <Sparkles size={18} color={colors.accent} style={{ marginRight: 8 }} />
                 <Text style={[styles.modalTitle, { color: colors.textMain }]}>
-                  {editingBannerId ? "Edit Custom Promotional Banner" : "Create New Custom Banner"}
+                  {replacingDefaultBanner
+                    ? `Replace Default: ${replacingDefaultBanner.slotName}`
+                    : editingBannerId
+                    ? "Edit Custom Promotional Banner"
+                    : "Create New Custom Banner"}
                 </Text>
               </View>
               <TouchableOpacity
                 style={styles.modalCloseBtn}
-                onPress={() => setIsBannerModalOpen(false)}
+                onPress={() => {
+                  setIsBannerModalOpen(false);
+                  setReplacingDefaultBanner(null);
+                }}
               >
                 <X size={18} color={colors.textSub} />
               </TouchableOpacity>
             </View>
 
             <ScrollView style={styles.modalScrollContent} showsVerticalScrollIndicator={false}>
+              {/* Informative Callout when Replacing a Default System Banner */}
+              {replacingDefaultBanner && (
+                <View
+                  style={[
+                    styles.replacingCalloutBox,
+                    {
+                      backgroundColor: isDark ? "rgba(234, 88, 12, 0.15)" : "#FFF7ED",
+                      borderColor: isDark ? "rgba(234, 88, 12, 0.4)" : "#FDBA74"
+                    }
+                  ]}
+                >
+                  <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 4 }}>
+                    <RefreshCw size={14} color="#EA580C" style={{ marginRight: 6 }} />
+                    <Text style={styles.replacingCalloutTitle}>
+                      Replacing: {replacingDefaultBanner.slotName}
+                    </Text>
+                  </View>
+                  <Text style={[styles.replacingCalloutText, { color: colors.textMain }]}>
+                    Current Default: &quot;{replacingDefaultBanner.title}&quot; &bull; Category: {replacingDefaultBanner.category}
+                  </Text>
+                  <Text style={[styles.replacingCalloutSub, { color: colors.textSub }]}>
+                    Uploading your custom banner here will override this default slot and render it directly on the SSC Home carousel.
+                  </Text>
+                </View>
+              )}
               {/* Image Upload & Validation Section */}
               <View style={styles.formGroup}>
                 <Text style={[styles.formLabel, { color: colors.textMain }]}>
@@ -2576,10 +3304,13 @@ export const SscScreen: React.FC<SscScreenProps> = ({ isDark = false }) => {
       {/* 7. LIVE MOBILE CAROUSEL PREVIEW MODAL                                */}
       {/* ===================================================================== */}
       <Modal
-        visible={!!previewingBanner}
+        visible={!!previewingBanner || !!previewingDefaultBanner}
         transparent
         animationType="fade"
-        onRequestClose={() => setPreviewingBanner(null)}
+        onRequestClose={() => {
+          setPreviewingBanner(null);
+          setPreviewingDefaultBanner(null);
+        }}
       >
         <View style={[styles.modalOverlay, { backgroundColor: "rgba(0,0,0,0.85)" }]}>
           <View style={styles.mobileMockupContainer}>
@@ -2588,7 +3319,10 @@ export const SscScreen: React.FC<SscScreenProps> = ({ isDark = false }) => {
               <View style={styles.phoneSpeaker} />
               <TouchableOpacity
                 style={styles.phoneCloseBtn}
-                onPress={() => setPreviewingBanner(null)}
+                onPress={() => {
+                  setPreviewingBanner(null);
+                  setPreviewingDefaultBanner(null);
+                }}
               >
                 <X size={18} color="#FFFFFF" />
               </TouchableOpacity>
@@ -2639,6 +3373,67 @@ export const SscScreen: React.FC<SscScreenProps> = ({ isDark = false }) => {
                   <Text style={styles.mockupMetaRow}>
                     <Text style={{ fontWeight: "700" }}>Schedule (IST): </Text>
                     {formatIST(previewingBanner.startAt)} → {formatIST(previewingBanner.endAt)}
+                  </Text>
+                </View>
+              </View>
+            )}
+
+            {previewingDefaultBanner && (
+              <View style={styles.phoneScreenContent}>
+                <View style={styles.mockupAppHeader}>
+                  <Text style={styles.mockupAppTitle}>SmartShopper Consumer</Text>
+                  <Text style={styles.mockupAppSub}>Default System Banner Preview</Text>
+                </View>
+
+                {/* Simulated Default Slide */}
+                <View
+                  style={[
+                    styles.mockupSlideCard,
+                    {
+                      backgroundColor: previewingDefaultBanner.accentColor,
+                      ...(Platform.OS === "web" ? ({ backgroundImage: previewingDefaultBanner.bgGradient } as any) : {})
+                    }
+                  ]}
+                >
+                  <View style={styles.mockupDefaultSlideBody}>
+                    <View style={[styles.defaultSpotlightTag, { backgroundColor: previewingDefaultBanner.badgeBg }]}>
+                      <Sparkles size={9} color={previewingDefaultBanner.badgeTextCol} style={{ marginRight: 4 }} />
+                      <Text style={[styles.defaultSpotlightText, { color: previewingDefaultBanner.badgeTextCol }]}>
+                        {previewingDefaultBanner.badgeText}
+                      </Text>
+                    </View>
+
+                    <Text style={styles.mockupBannerTitle} numberOfLines={2}>
+                      {previewingDefaultBanner.title}
+                    </Text>
+
+                    <Text style={styles.mockupBannerSubtitle} numberOfLines={2}>
+                      {previewingDefaultBanner.subtitle}
+                    </Text>
+
+                    <View style={styles.defaultVisualCta}>
+                      <Text style={styles.defaultVisualCtaText}>{previewingDefaultBanner.ctaText}</Text>
+                    </View>
+                  </View>
+                </View>
+
+                {/* Mockup Meta Info */}
+                <View style={styles.mockupMetaBox}>
+                  <Text style={styles.mockupMetaRow}>
+                    <Text style={{ fontWeight: "700" }}>Slot Placement: </Text>
+                    {previewingDefaultBanner.slotName}
+                  </Text>
+                  <Text style={styles.mockupMetaRow}>
+                    <Text style={{ fontWeight: "700" }}>Category: </Text>
+                    {previewingDefaultBanner.category}
+                  </Text>
+                  <Text style={styles.mockupMetaRow}>
+                    <Text style={{ fontWeight: "700" }}>Current Status: </Text>
+                    {getReplacingBanner(previewingDefaultBanner) ? "Replaced by Active Custom Banner" : "Active (Running Default Fallback)"}
+                  </Text>
+                  <Text style={styles.mockupMetaRow}>
+                    <Text style={{ fontWeight: "700" }}>Role: </Text>
+                    {previewingDefaultBanner.description}
                   </Text>
                 </View>
               </View>
@@ -3973,5 +4768,218 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 12,
     fontWeight: "700"
+  },
+
+  /* ========================================================================= */
+  /* Default System Banners Styles                                             */
+  /* ========================================================================= */
+  tabRunningBadge: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 5,
+    marginLeft: 6
+  },
+  tabRunningBadgeText: {
+    fontSize: 9.5,
+    fontWeight: "800"
+  },
+
+  defaultSummaryCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: 12,
+    borderRadius: 10,
+    borderWidth: 1,
+    marginBottom: 10,
+    gap: 12
+  },
+  defaultSummaryLeft: {
+    flex: 1
+  },
+  defaultSummaryTitle: {
+    fontSize: 13,
+    fontWeight: "800"
+  },
+  defaultSummarySub: {
+    fontSize: 11,
+    lineHeight: 15,
+    marginTop: 2
+  },
+  viewDefaultsBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 7
+  },
+  viewDefaultsBtnText: {
+    color: "#FFFFFF",
+    fontSize: 11.5,
+    fontWeight: "700"
+  },
+
+  defaultHeaderHintBox: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginLeft: "auto",
+    paddingHorizontal: 10,
+    paddingVertical: 4
+  },
+  defaultHeaderHintText: {
+    fontSize: 11,
+    fontStyle: "italic"
+  },
+
+  defaultBannerCard: {
+    flex: 1,
+    minWidth: 320,
+    maxWidth: 480,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    overflow: "hidden"
+  },
+  defaultBannerVisualWrap: {
+    width: "100%",
+    minHeight: 150,
+    padding: 12,
+    justifyContent: "space-between",
+    position: "relative"
+  },
+  defaultBannerVisualHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8
+  },
+  slotBadge: {
+    paddingHorizontal: 7,
+    paddingVertical: 2.5,
+    borderRadius: 5
+  },
+  slotBadgeText: {
+    color: "#FFFFFF",
+    fontSize: 9.5,
+    fontWeight: "800",
+    letterSpacing: 0.3
+  },
+  defaultStatusBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6
+  },
+  defaultStatusBadgeText: {
+    color: "#FFFFFF",
+    fontSize: 9,
+    fontWeight: "900",
+    letterSpacing: 0.5
+  },
+  defaultBannerVisualBody: {
+    paddingTop: 2
+  },
+  defaultSpotlightTag: {
+    alignSelf: "flex-start",
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    marginBottom: 4
+  },
+  defaultSpotlightText: {
+    fontSize: 8.5,
+    fontWeight: "900",
+    letterSpacing: 0.4
+  },
+  defaultVisualTitle: {
+    color: "#FFFFFF",
+    fontSize: 15,
+    fontWeight: "900",
+    letterSpacing: -0.2,
+    lineHeight: 19
+  },
+  defaultVisualSub: {
+    color: "rgba(255, 255, 255, 0.9)",
+    fontSize: 11,
+    fontWeight: "500",
+    lineHeight: 15,
+    marginTop: 2
+  },
+  defaultVisualCta: {
+    alignSelf: "flex-start",
+    backgroundColor: "rgba(255, 255, 255, 0.92)",
+    paddingHorizontal: 10,
+    paddingVertical: 3.5,
+    borderRadius: 5,
+    marginTop: 8
+  },
+  defaultVisualCtaText: {
+    color: "#0F172A",
+    fontSize: 10,
+    fontWeight: "800"
+  },
+
+  defaultCardMetaRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between"
+  },
+  defaultStatusBox: {
+    padding: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    marginTop: 10
+  },
+  defaultStatusBoxTitle: {
+    fontSize: 11,
+    fontWeight: "800"
+  },
+  defaultStatusBoxSub: {
+    fontSize: 10.5,
+    lineHeight: 14,
+    marginTop: 2
+  },
+  replaceDefaultBtn: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 7,
+    paddingHorizontal: 12,
+    borderRadius: 7,
+    marginRight: 6
+  },
+  replaceDefaultBtnText: {
+    color: "#FFFFFF",
+    fontSize: 11.5,
+    fontWeight: "800"
+  },
+
+  replacingCalloutBox: {
+    padding: 12,
+    borderRadius: 10,
+    borderWidth: 1,
+    marginBottom: 16
+  },
+  replacingCalloutTitle: {
+    color: "#EA580C",
+    fontSize: 12.5,
+    fontWeight: "800"
+  },
+  replacingCalloutText: {
+    fontSize: 12,
+    fontWeight: "700",
+    lineHeight: 16
+  },
+  replacingCalloutSub: {
+    fontSize: 11,
+    lineHeight: 15,
+    marginTop: 4
+  },
+
+  mockupDefaultSlideBody: {
+    flex: 1,
+    padding: 12,
+    justifyContent: "center"
   }
 });
