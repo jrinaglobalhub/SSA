@@ -400,7 +400,7 @@ export const SscScreen: React.FC<SscScreenProps> = ({ isDark = false }) => {
 
   // Default System Banners Management State
   const [replacingDefaultBanner, setReplacingDefaultBanner] = useState<DefaultSystemBanner | null>(null);
-  const [defaultBannerFilter, setDefaultBannerFilter] = useState<"all" | "running" | "replaced">("all");
+  const [defaultBannerFilter, setDefaultBannerFilter] = useState<"all" | "active" | "inactive">("all");
   const [defaultBannerSearch, setDefaultBannerSearch] = useState("");
 
   const colors = isDark
@@ -828,20 +828,27 @@ export const SscScreen: React.FC<SscScreenProps> = ({ isDark = false }) => {
     [banners, nowTime]
   );
 
-  // Statistics on default system banners (running vs replaced)
+  // Statistics on banner slots (active vs empty/inactive)
   const defaultBannerStats = useMemo(() => {
-    let running = 0;
-    let replaced = 0;
+    let activeCustomCount = 0;
+    let emptyCount = 0;
     DEFAULT_SSC_BANNERS.forEach((db) => {
       if (!db.canReplace) return; // Universal is permanent
       const repl = getReplacingBanner(db);
       if (repl) {
-        replaced++;
+        activeCustomCount++;
       } else {
-        running++;
+        emptyCount++;
       }
     });
-    return { running, replaced, total: DEFAULT_SSC_BANNERS.length, replaceableTotal: 4 };
+    const activeCount = 1 + activeCustomCount; // 1 Universal + active custom slots
+    return {
+      activeCount,
+      emptyCount,
+      activeCustomCount,
+      total: DEFAULT_SSC_BANNERS.length,
+      slotsTotal: 4
+    };
   }, [getReplacingBanner]);
 
   // Filter default system banners
@@ -850,13 +857,13 @@ export const SscScreen: React.FC<SscScreenProps> = ({ isDark = false }) => {
       const repl = getReplacingBanner(db);
       const isReplaced = !!repl;
 
-      if (defaultBannerFilter === "running") {
-        if (!db.canReplace) return true; // Universal is always running
-        if (isReplaced) return false;
-      }
-      if (defaultBannerFilter === "replaced") {
-        if (!db.canReplace) return false; // Universal can never be replaced
+      if (defaultBannerFilter === "active") {
+        if (!db.canReplace) return true; // Universal is permanent/active
         if (!isReplaced) return false;
+      }
+      if (defaultBannerFilter === "inactive") {
+        if (!db.canReplace) return false; // Universal is never inactive
+        if (isReplaced) return false;
       }
 
       if (defaultBannerSearch.trim()) {
@@ -1560,23 +1567,23 @@ export const SscScreen: React.FC<SscScreenProps> = ({ isDark = false }) => {
                   { color: bannerSection === "default" ? "#FFFFFF" : colors.textSub }
                 ]}
               >
-                Default System Banners ({DEFAULT_SSC_BANNERS.length})
+                Banner Slots ({DEFAULT_SSC_BANNERS.length})
               </Text>
               <View
                 style={[
                   styles.tabRunningBadge,
                   {
-                    backgroundColor: bannerSection === "default" ? "rgba(255,255,255,0.25)" : (isDark ? "#064E3B" : "#ECFDF5")
+                    backgroundColor: bannerSection === "default" ? "rgba(255,255,255,0.25)" : (isDark ? "#1E293B" : "#F1F5F9")
                   }
                 ]}
               >
                 <Text
                   style={[
                     styles.tabRunningBadgeText,
-                    { color: bannerSection === "default" ? "#FFFFFF" : "#059669" }
+                    { color: bannerSection === "default" ? "#FFFFFF" : colors.textSub }
                   ]}
                 >
-                  {defaultBannerStats.running} Running
+                  {defaultBannerStats.activeCount} Active &bull; {defaultBannerStats.emptyCount} Empty
                 </Text>
               </View>
             </TouchableOpacity>
@@ -1646,23 +1653,23 @@ export const SscScreen: React.FC<SscScreenProps> = ({ isDark = false }) => {
                       <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 2 }}>
                         <Layout size={14} color="#EA580C" style={{ marginRight: 6 }} />
                         <Text style={[styles.defaultSummaryTitle, { color: colors.textMain }]}>
-                          SSC Default Banners
+                          Home Banner Slots
                         </Text>
                         <View style={[styles.statusBadgeSmall, { backgroundColor: "#ECFDF5", marginLeft: 8 }]}>
                           <Text style={[styles.statusBadgeSmallText, { color: "#059669" }]}>
-                            {defaultBannerStats.running} RUNNING AS FALLBACK
+                            {defaultBannerStats.activeCount} ACTIVE
                           </Text>
                         </View>
-                        {defaultBannerStats.replaced > 0 && (
-                          <View style={[styles.statusBadgeSmall, { backgroundColor: "#FAF5FF", marginLeft: 6 }]}>
-                            <Text style={[styles.statusBadgeSmallText, { color: "#7E22CE" }]}>
-                              {defaultBannerStats.replaced} REPLACED
+                        {defaultBannerStats.emptyCount > 0 && (
+                          <View style={[styles.statusBadgeSmall, { backgroundColor: isDark ? "#1E293B" : "#F1F5F9", marginLeft: 6 }]}>
+                            <Text style={[styles.statusBadgeSmallText, { color: colors.textSub }]}>
+                              {defaultBannerStats.emptyCount} EMPTY
                             </Text>
                           </View>
                         )}
                       </View>
                       <Text style={[styles.defaultSummarySub, { color: colors.textSub }]}>
-                        SmartShopper runs 5 default banners: 1 Permanent Universal Core banner (fixed) + 4 Customizable Promotional Slots (Slots 1–4) that can be replaced with custom banners.
+                        SmartShopper has 5 banner slots: 1 Permanent Universal Core banner + 4 customizable promotional slots. Click to manage active banners or add new ones.
                       </Text>
                     </View>
                     <TouchableOpacity
@@ -1670,7 +1677,7 @@ export const SscScreen: React.FC<SscScreenProps> = ({ isDark = false }) => {
                       onPress={() => setBannerSection("default")}
                       activeOpacity={0.85}
                     >
-                      <Text style={styles.viewDefaultsBtnText}>View Default Banners ({DEFAULT_SSC_BANNERS.length})</Text>
+                      <Text style={styles.viewDefaultsBtnText}>View Banner Slots ({DEFAULT_SSC_BANNERS.length})</Text>
                       <ChevronRight size={13} color="#FFFFFF" style={{ marginLeft: 4 }} />
                     </TouchableOpacity>
                   </View>
@@ -2050,9 +2057,9 @@ export const SscScreen: React.FC<SscScreenProps> = ({ isDark = false }) => {
                 <View style={styles.bannerActionsRow}>
                   <View style={styles.filterPillsRow}>
                     {[
-                      { id: "all", label: `All Defaults (${DEFAULT_SSC_BANNERS.length})` },
-                      { id: "running", label: `Running Default (${defaultBannerStats.running})` },
-                      { id: "replaced", label: `Replaced by Custom (${defaultBannerStats.replaced})` }
+                      { id: "all", label: `All Slots (${DEFAULT_SSC_BANNERS.length})` },
+                      { id: "active", label: `Active (${defaultBannerStats.activeCount})` },
+                      { id: "inactive", label: `Empty / Inactive (${defaultBannerStats.emptyCount})` }
                     ].map((pill) => {
                       const isSel = defaultBannerFilter === pill.id;
                       return (
@@ -2080,7 +2087,7 @@ export const SscScreen: React.FC<SscScreenProps> = ({ isDark = false }) => {
                   <View style={styles.defaultHeaderHintBox}>
                     <Info size={13} color={colors.accent} style={{ marginRight: 6 }} />
                     <Text style={[styles.defaultHeaderHintText, { color: colors.textSub }]}>
-                      Universal banner is permanent &amp; fixed. Slots 1–4 can be replaced with custom promotional banners.
+                      Click &quot;+ Add Banner&quot; on any empty slot to activate a promotional banner for that category.
                     </Text>
                   </View>
                 </View>
@@ -2112,7 +2119,7 @@ export const SscScreen: React.FC<SscScreenProps> = ({ isDark = false }) => {
                             borderColor: !db.canReplace
                               ? (isDark ? "#EA580C" : "#FDBA74")
                               : isReplaced
-                              ? (isDark ? "#7E22CE" : "#C084FC")
+                              ? (isDark ? "#059669" : "#6EE7B7")
                               : colors.border
                           }
                         ]}
@@ -2122,8 +2129,14 @@ export const SscScreen: React.FC<SscScreenProps> = ({ isDark = false }) => {
                           style={[
                             styles.defaultBannerVisualWrap,
                             {
-                              backgroundColor: db.accentColor,
-                              ...(Platform.OS === "web" ? ({ backgroundImage: db.bgGradient } as any) : {})
+                              backgroundColor: !db.canReplace
+                                ? db.accentColor
+                                : isReplaced
+                                ? db.accentColor
+                                : (isDark ? "#1E293B" : "#475569"),
+                              ...(Platform.OS === "web" && (!db.canReplace || isReplaced)
+                                ? ({ backgroundImage: db.bgGradient } as any)
+                                : {})
                             }
                           ]}
                         >
@@ -2142,40 +2155,67 @@ export const SscScreen: React.FC<SscScreenProps> = ({ isDark = false }) => {
                                   backgroundColor: !db.canReplace
                                     ? "#EA580C"
                                     : isReplaced
-                                    ? "#7E22CE"
-                                    : "#059669"
+                                    ? "#059669"
+                                    : (isDark ? "#334155" : "#64748B")
                                 }
                               ]}
                             >
                               <Text style={styles.defaultStatusBadgeText}>
                                 {!db.canReplace
-                                  ? "PERMANENT (CORE UNIVERSAL)"
+                                  ? "PERMANENT CORE"
                                   : isReplaced
-                                  ? "REPLACED BY CUSTOM"
-                                  : "ACTIVE (RUNNING DEFAULT)"}
+                                  ? "ACTIVE"
+                                  : "INACTIVE"}
                               </Text>
                             </View>
                           </View>
 
                           {/* Simulated Content Layout */}
                           <View style={styles.defaultBannerVisualBody}>
-                            <View style={[styles.defaultSpotlightTag, { backgroundColor: db.badgeBg }]}>
+                            <View
+                              style={[
+                                styles.defaultSpotlightTag,
+                                {
+                                  backgroundColor: !db.canReplace || isReplaced
+                                    ? db.badgeBg
+                                    : "rgba(255, 255, 255, 0.15)"
+                                }
+                              ]}
+                            >
                               <Sparkles size={9} color={db.badgeTextCol} style={{ marginRight: 4 }} />
                               <Text style={[styles.defaultSpotlightText, { color: db.badgeTextCol }]}>
-                                {db.badgeText}
+                                {!db.canReplace
+                                  ? db.badgeText
+                                  : isReplaced && matchedRepl
+                                  ? matchedRepl.title.toUpperCase().slice(0, 24)
+                                  : `${db.category.toUpperCase()} SLOT`}
                               </Text>
                             </View>
 
                             <Text style={styles.defaultVisualTitle} numberOfLines={2}>
-                              {db.title}
+                              {!db.canReplace
+                                ? db.title
+                                : isReplaced && matchedRepl
+                                ? matchedRepl.title
+                                : `${db.category} - Slot Available`}
                             </Text>
 
                             <Text style={styles.defaultVisualSub} numberOfLines={2}>
-                              {db.subtitle}
+                              {!db.canReplace
+                                ? db.subtitle
+                                : isReplaced && matchedRepl
+                                ? (matchedRepl.subtitle || "Active promotional banner")
+                                : "No custom banner active. Click '+ Add Banner' to publish."}
                             </Text>
 
                             <View style={styles.defaultVisualCta}>
-                              <Text style={styles.defaultVisualCtaText}>{db.ctaText}</Text>
+                              <Text style={styles.defaultVisualCtaText}>
+                                {!db.canReplace
+                                  ? db.ctaText
+                                  : isReplaced
+                                  ? "View Deals →"
+                                  : "+ Add Banner →"}
+                              </Text>
                             </View>
                           </View>
                         </View>
@@ -2204,7 +2244,7 @@ export const SscScreen: React.FC<SscScreenProps> = ({ isDark = false }) => {
                             <View style={[styles.destBadge, { backgroundColor: colors.inputBg }]}>
                               <Hash size={10} color={colors.textSub} style={{ marginRight: 3 }} />
                               <Text style={[styles.destBadgeText, { color: colors.textSub }]}>
-                                {!db.canReplace ? "Core Priority" : `Slot #${db.slotNumber}`}
+                                {!db.canReplace ? "Permanent" : `Slot #${db.slotNumber}`}
                               </Text>
                             </View>
                           </View>
@@ -2217,13 +2257,13 @@ export const SscScreen: React.FC<SscScreenProps> = ({ isDark = false }) => {
                                 backgroundColor: !db.canReplace
                                   ? (isDark ? "rgba(234, 88, 12, 0.12)" : "#FFF7ED")
                                   : isReplaced
-                                  ? (isDark ? "rgba(126, 34, 206, 0.15)" : "#FAF5FF")
-                                  : (isDark ? "rgba(5, 150, 105, 0.12)" : "#ECFDF5"),
+                                  ? (isDark ? "rgba(5, 150, 105, 0.12)" : "#ECFDF5")
+                                  : (isDark ? "rgba(100, 116, 139, 0.12)" : "#F8FAFC"),
                                 borderColor: !db.canReplace
                                   ? (isDark ? "rgba(234, 88, 12, 0.3)" : "#FED7AA")
                                   : isReplaced
-                                  ? (isDark ? "rgba(126, 34, 206, 0.3)" : "#E9D5FF")
-                                  : (isDark ? "rgba(5, 150, 105, 0.3)" : "#A7F3D0")
+                                  ? (isDark ? "rgba(5, 150, 105, 0.3)" : "#A7F3D0")
+                                  : (isDark ? "rgba(100, 116, 139, 0.25)" : "#E2E8F0")
                               }
                             ]}
                           >
@@ -2231,9 +2271,9 @@ export const SscScreen: React.FC<SscScreenProps> = ({ isDark = false }) => {
                               {!db.canReplace ? (
                                 <Lock size={12} color="#EA580C" style={{ marginRight: 5 }} />
                               ) : isReplaced ? (
-                                <RefreshCw size={12} color="#7E22CE" style={{ marginRight: 5 }} />
-                              ) : (
                                 <CheckCircle2 size={12} color="#059669" style={{ marginRight: 5 }} />
+                              ) : (
+                                <AlertCircle size={12} color={colors.textSub} style={{ marginRight: 5 }} />
                               )}
                               <Text
                                 style={[
@@ -2242,31 +2282,31 @@ export const SscScreen: React.FC<SscScreenProps> = ({ isDark = false }) => {
                                     color: !db.canReplace
                                       ? "#EA580C"
                                       : isReplaced
-                                      ? "#7E22CE"
-                                      : "#059669"
+                                      ? "#059669"
+                                      : colors.textSub
                                   }
                                 ]}
                               >
                                 {!db.canReplace
-                                  ? "Permanent Core Universal Banner"
+                                  ? "Permanent Core Universal Banner (Active)"
                                   : isReplaced
-                                  ? "Replaced by Active Custom Banner"
-                                  : "Currently Running as Default Fallback"}
+                                  ? "Active Custom Banner"
+                                  : "No Banner Active (Empty Slot)"}
                               </Text>
                             </View>
 
                             {!db.canReplace ? (
                               <Text style={[styles.defaultStatusBoxSub, { color: colors.textSub }]}>
-                                Core SmartShopper branding banner. Always active for all shoppers and cannot be replaced or deleted.
+                                Core SmartShopper Universal banner. Runs permanently across all sessions and cannot be replaced or deleted.
                               </Text>
                             ) : isReplaced && matchedRepl ? (
                               <Text style={[styles.defaultStatusBoxSub, { color: colors.textMain }]} numberOfLines={2}>
-                                Custom Replacement: &quot;{matchedRepl.title}&quot; &bull; Priority #{matchedRepl.displayOrder}
+                                Active: &quot;{matchedRepl.title}&quot; &bull; Priority #{matchedRepl.displayOrder}
                                 {matchedRepl.merchantName ? ` (${matchedRepl.merchantName})` : ""}
                               </Text>
                             ) : (
                               <Text style={[styles.defaultStatusBoxSub, { color: colors.textSub }]}>
-                                Consumers see this default banner automatically in SSC until an admin creates a custom replacement banner.
+                                Currently no banner is active for this slot. Click &quot;+ Add Banner&quot; below to add a promotional banner for this category.
                               </Text>
                             )}
                           </View>
@@ -2285,10 +2325,11 @@ export const SscScreen: React.FC<SscScreenProps> = ({ isDark = false }) => {
                               >
                                 <Lock size={12} color="#EA580C" style={{ marginRight: 5 }} />
                                 <Text style={[styles.lockedUniversalText, { color: "#EA580C" }]}>
-                                  Universal (Non-replaceable)
+                                  Universal (Permanent Core)
                                 </Text>
                               </View>
-                            ) : (
+                            ) : !isReplaced ? (
+                              /* For inactive slots: ONLY the + Add Banner option */
                               <TouchableOpacity
                                 style={[
                                   styles.replaceDefaultBtn,
@@ -2299,9 +2340,37 @@ export const SscScreen: React.FC<SscScreenProps> = ({ isDark = false }) => {
                               >
                                 <Plus size={13} color="#FFFFFF" style={{ marginRight: 5 }} />
                                 <Text style={styles.replaceDefaultBtnText}>
-                                  {isReplaced ? "Replace Again" : "Replace with Custom Banner"}
+                                  + Add Banner
                                 </Text>
                               </TouchableOpacity>
+                            ) : (
+                              /* For active slots: Replace Banner + Edit */
+                              <>
+                                <TouchableOpacity
+                                  style={[
+                                    styles.replaceDefaultBtn,
+                                    { backgroundColor: colors.accent }
+                                  ]}
+                                  onPress={() => handleReplaceDefaultBanner(db)}
+                                  activeOpacity={0.84}
+                                >
+                                  <Plus size={13} color="#FFFFFF" style={{ marginRight: 5 }} />
+                                  <Text style={styles.replaceDefaultBtnText}>
+                                    Replace Banner
+                                  </Text>
+                                </TouchableOpacity>
+
+                                {matchedRepl && (
+                                  <TouchableOpacity
+                                    style={[styles.bannerActionBtn, { borderColor: colors.border, flex: 0, paddingHorizontal: 10 }]}
+                                    onPress={() => openEditBannerModal(matchedRepl)}
+                                    activeOpacity={0.7}
+                                  >
+                                    <Edit3 size={12} color={colors.textMain} style={{ marginRight: 4 }} />
+                                    <Text style={[styles.bannerActionBtnText, { color: colors.textMain }]}>Edit</Text>
+                                  </TouchableOpacity>
+                                )}
+                              </>
                             )}
 
                             <TouchableOpacity
@@ -2312,17 +2381,6 @@ export const SscScreen: React.FC<SscScreenProps> = ({ isDark = false }) => {
                               <Eye size={12} color={colors.accent} style={{ marginRight: 4 }} />
                               <Text style={[styles.bannerActionBtnText, { color: colors.accent }]}>Preview</Text>
                             </TouchableOpacity>
-
-                            {isReplaced && matchedRepl && (
-                              <TouchableOpacity
-                                style={[styles.bannerActionBtn, { borderColor: colors.border, flex: 0, paddingHorizontal: 10 }]}
-                                onPress={() => openEditBannerModal(matchedRepl)}
-                                activeOpacity={0.7}
-                              >
-                                <Edit3 size={12} color={colors.textMain} style={{ marginRight: 4 }} />
-                                <Text style={[styles.bannerActionBtnText, { color: colors.textMain }]}>Edit Replacement</Text>
-                              </TouchableOpacity>
-                            )}
                           </View>
                         </View>
                       </View>
@@ -2518,7 +2576,9 @@ export const SscScreen: React.FC<SscScreenProps> = ({ isDark = false }) => {
                 <Sparkles size={18} color={colors.accent} style={{ marginRight: 8 }} />
                 <Text style={[styles.modalTitle, { color: colors.textMain }]}>
                   {replacingDefaultBanner
-                    ? `Replace Default: ${replacingDefaultBanner.slotName}`
+                    ? (getReplacingBanner(replacingDefaultBanner)
+                        ? `Replace Banner: ${replacingDefaultBanner.slotName}`
+                        : `+ Add Banner: ${replacingDefaultBanner.slotName}`)
                     : editingBannerId
                     ? "Edit Custom Promotional Banner"
                     : "Create New Custom Banner"}
@@ -2536,31 +2596,41 @@ export const SscScreen: React.FC<SscScreenProps> = ({ isDark = false }) => {
             </View>
 
             <ScrollView style={styles.modalScrollContent} showsVerticalScrollIndicator={false}>
-              {/* Informative Callout when Replacing a Default System Banner */}
-              {replacingDefaultBanner && (
-                <View
-                  style={[
-                    styles.replacingCalloutBox,
-                    {
-                      backgroundColor: isDark ? "rgba(234, 88, 12, 0.15)" : "#FFF7ED",
-                      borderColor: isDark ? "rgba(234, 88, 12, 0.4)" : "#FDBA74"
-                    }
-                  ]}
-                >
-                  <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 4 }}>
-                    <RefreshCw size={14} color="#EA580C" style={{ marginRight: 6 }} />
-                    <Text style={styles.replacingCalloutTitle}>
-                      Replacing: {replacingDefaultBanner.slotName}
+              {/* Informative Callout when Adding or Replacing a Slot Banner */}
+              {replacingDefaultBanner && (() => {
+                const activeRepl = getReplacingBanner(replacingDefaultBanner);
+                return (
+                  <View
+                    style={[
+                      styles.replacingCalloutBox,
+                      {
+                        backgroundColor: isDark ? "rgba(234, 88, 12, 0.15)" : "#FFF7ED",
+                        borderColor: isDark ? "rgba(234, 88, 12, 0.4)" : "#FDBA74"
+                      }
+                    ]}
+                  >
+                    <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 4 }}>
+                      {activeRepl ? (
+                        <RefreshCw size={14} color="#EA580C" style={{ marginRight: 6 }} />
+                      ) : (
+                        <Plus size={14} color="#EA580C" style={{ marginRight: 6 }} />
+                      )}
+                      <Text style={styles.replacingCalloutTitle}>
+                        {activeRepl ? `Replacing: ${replacingDefaultBanner.slotName}` : `+ Add Banner for ${replacingDefaultBanner.slotName}`}
+                      </Text>
+                    </View>
+                    <Text style={[styles.replacingCalloutText, { color: colors.textMain }]}>
+                      Category: {replacingDefaultBanner.category} &bull; Slot #{replacingDefaultBanner.slotNumber}
+                      {activeRepl ? ` &bull; Currently Active: "${activeRepl.title}"` : " (Currently Empty Slot)"}
+                    </Text>
+                    <Text style={[styles.replacingCalloutSub, { color: colors.textSub }]}>
+                      {activeRepl
+                        ? "Saving this new banner will replace the active banner for this slot on the SmartShopper home carousel."
+                        : "Upload and publish your banner to make it active on the SmartShopper home carousel for this category slot."}
                     </Text>
                   </View>
-                  <Text style={[styles.replacingCalloutText, { color: colors.textMain }]}>
-                    Current Default: &quot;{replacingDefaultBanner.title}&quot; &bull; Category: {replacingDefaultBanner.category}
-                  </Text>
-                  <Text style={[styles.replacingCalloutSub, { color: colors.textSub }]}>
-                    Uploading your custom banner here will override this default slot and render it directly on the SSC Home carousel.
-                  </Text>
-                </View>
-              )}
+                );
+              })()}
               {/* Image Upload & Validation Section */}
               <View style={styles.formGroup}>
                 <Text style={[styles.formLabel, { color: colors.textMain }]}>
@@ -3402,10 +3472,10 @@ export const SscScreen: React.FC<SscScreenProps> = ({ isDark = false }) => {
                   <Text style={styles.mockupMetaRow}>
                     <Text style={{ fontWeight: "700" }}>Current Status: </Text>
                     {!previewingDefaultBanner.canReplace
-                      ? "Permanent Core Universal Banner (Non-replaceable)"
+                      ? "Permanent Core Universal Banner (Active)"
                       : getReplacingBanner(previewingDefaultBanner)
-                      ? "Replaced by Active Custom Banner"
-                      : "Active (Running Default Fallback)"}
+                      ? `Active Custom Banner ("${getReplacingBanner(previewingDefaultBanner)?.title}")`
+                      : "Inactive (No banner added yet)"}
                   </Text>
                   <Text style={styles.mockupMetaRow}>
                     <Text style={{ fontWeight: "700" }}>Role: </Text>
