@@ -57,7 +57,8 @@ import {
   Ban,
   ArrowRight,
   Sliders,
-  Layout
+  Layout,
+  Lock
 } from "lucide-react-native";
 import {
   AdminApi,
@@ -114,36 +115,40 @@ export interface DefaultSystemBanner {
   badgeTextCol: string;
   bgGradient: string;
   description: string;
-  placementType: "Hero Carousel" | "Category Feature Slide";
+  placementType: string;
   defaultTags: string[];
+  isUniversal?: boolean;
+  canReplace: boolean;
 }
 
 export const DEFAULT_SSC_BANNERS: DefaultSystemBanner[] = [
   {
-    id: "default_slot_0_hero",
-    slotKey: "hero_spotlight",
-    slotNumber: 1,
-    slotName: "Slot 1: Universal Hero Spotlight",
+    id: "default_universal_hero",
+    slotKey: "universal_hero",
+    slotNumber: 0,
+    slotName: "Universal Core Banner (Permanent)",
     title: "Great Deals. Better Shopping. All Around You!",
-    subtitle: "Discover exciting deals and offers from stores around you.",
-    badgeText: "SMARTSHOPPER SPOTLIGHT",
+    subtitle: "Discover exciting deals, verified store offers & local shopping benefits.",
+    badgeText: "SMARTSHOPPER UNIVERSAL",
     category: "Universal",
     categoryKey: "DEFAULT",
-    ctaText: "Explore Deals →",
+    ctaText: "Explore SmartShopper →",
     defaultOrder: 0,
     accentColor: "#EA580C",
     badgeBg: "rgba(255, 255, 255, 0.25)",
     badgeTextCol: "#FFFFFF",
     bgGradient: "linear-gradient(135deg, #EA580C 0%, #D94E07 55%, #C2410C 100%)",
-    description: "Primary hero spotlight banner running in the top carousel. Displays by default to all consumers until replaced by a custom hero banner.",
-    placementType: "Hero Carousel",
-    defaultTags: ["Carousel Slide 1", "Universal", "All Shoppers"]
+    description: "Permanent Universal Core Banner. Always active across all consumers in SmartShopper. This banner is fixed and cannot be replaced or deleted.",
+    placementType: "Universal Core",
+    defaultTags: ["Permanent Banner", "Universal", "Fixed / Non-Replaceable"],
+    isUniversal: true,
+    canReplace: false
   },
   {
     id: "default_slot_1_groceries",
-    slotKey: "groceries",
-    slotNumber: 2,
-    slotName: "Slot 2: Groceries & Supermarkets",
+    slotKey: "slot_1_groceries",
+    slotNumber: 1,
+    slotName: "Slot 1: Groceries & Supermarkets",
     title: "Fresh Daily Essentials & Supermarket Deals",
     subtitle: "Up to 40% OFF on pantry staples, fresh fruits, vegetables & dairy.",
     badgeText: "FRESH DAILY DEALS",
@@ -155,15 +160,17 @@ export const DEFAULT_SSC_BANNERS: DefaultSystemBanner[] = [
     badgeBg: "rgba(255, 255, 255, 0.25)",
     badgeTextCol: "#FFFFFF",
     bgGradient: "linear-gradient(135deg, #15803D 0%, #166534 60%, #14532D 100%)",
-    description: "Default promotional slide for grocery, fresh vegetables, dairy, and local supermarket offers.",
-    placementType: "Category Feature Slide",
-    defaultTags: ["Category: Grocery", "Local Supermarkets"]
+    description: "Customizable Promotional Slot 1. Runs default grocery deals until replaced by a custom promotional banner.",
+    placementType: "Promotional Slot 1",
+    defaultTags: ["Slot #1", "Replaceable", "Category: Grocery"],
+    isUniversal: false,
+    canReplace: true
   },
   {
     id: "default_slot_2_dining",
-    slotKey: "dining",
-    slotNumber: 3,
-    slotName: "Slot 3: Food & Dining Specials",
+    slotKey: "slot_2_dining",
+    slotNumber: 2,
+    slotName: "Slot 2: Food & Dining Specials",
     title: "Delicious Dining & Restaurant Offers",
     subtitle: "Special dining discounts, chef specials & quick bites from top local restaurants.",
     badgeText: "GOURMET SPECIAL",
@@ -175,15 +182,17 @@ export const DEFAULT_SSC_BANNERS: DefaultSystemBanner[] = [
     badgeBg: "rgba(255, 255, 255, 0.25)",
     badgeTextCol: "#FFFFFF",
     bgGradient: "linear-gradient(135deg, #BE123C 0%, #9F1239 60%, #881337 100%)",
-    description: "Default promotional slide highlighting restaurants, cafes, bakeries, and gourmet dining.",
-    placementType: "Category Feature Slide",
-    defaultTags: ["Category: Dining", "Restaurants & Cafes"]
+    description: "Customizable Promotional Slot 2. Runs default restaurant & food specials until replaced by a custom promotional banner.",
+    placementType: "Promotional Slot 2",
+    defaultTags: ["Slot #2", "Replaceable", "Category: Dining"],
+    isUniversal: false,
+    canReplace: true
   },
   {
     id: "default_slot_3_electronics",
-    slotKey: "electronics",
-    slotNumber: 4,
-    slotName: "Slot 4: Electronics & Gadgets",
+    slotKey: "slot_3_electronics",
+    slotNumber: 3,
+    slotName: "Slot 3: Electronics & Gadgets",
     title: "Tech, Smartphones & Home Appliances",
     subtitle: "Verified deals on smartphones, accessories, gadgets and smart home electronics.",
     badgeText: "TECH SPOTLIGHT",
@@ -195,15 +204,17 @@ export const DEFAULT_SSC_BANNERS: DefaultSystemBanner[] = [
     badgeBg: "rgba(255, 255, 255, 0.25)",
     badgeTextCol: "#FFFFFF",
     bgGradient: "linear-gradient(135deg, #1D4ED8 0%, #1E40AF 60%, #172554 100%)",
-    description: "Default promotional slide highlighting electronics, mobile devices, computers, and appliances.",
-    placementType: "Category Feature Slide",
-    defaultTags: ["Category: Electronics", "Tech & Gadgets"]
+    description: "Customizable Promotional Slot 3. Runs default tech & electronics offers until replaced by a custom promotional banner.",
+    placementType: "Promotional Slot 3",
+    defaultTags: ["Slot #3", "Replaceable", "Category: Electronics"],
+    isUniversal: false,
+    canReplace: true
   },
   {
     id: "default_slot_4_fashion",
-    slotKey: "fashion",
-    slotNumber: 5,
-    slotName: "Slot 5: Fashion & Boutiques",
+    slotKey: "slot_4_fashion",
+    slotNumber: 4,
+    slotName: "Slot 4: Fashion & Boutiques",
     title: "Trending Styles & Boutique Collections",
     subtitle: "Curated festive, casual, and formal fashion collections from local boutiques.",
     badgeText: "FASHION & APPAREL",
@@ -215,109 +226,11 @@ export const DEFAULT_SSC_BANNERS: DefaultSystemBanner[] = [
     badgeBg: "rgba(255, 255, 255, 0.25)",
     badgeTextCol: "#FFFFFF",
     bgGradient: "linear-gradient(135deg, #7E22CE 0%, #6B21A8 60%, #581C87 100%)",
-    description: "Default promotional slide highlighting apparel, boutiques, clothing, footwear, and accessories.",
-    placementType: "Category Feature Slide",
-    defaultTags: ["Category: Fashion", "Boutiques & Apparel"]
-  },
-  {
-    id: "default_slot_5_beauty",
-    slotKey: "beauty",
-    slotNumber: 6,
-    slotName: "Slot 6: Beauty, Spa & Salons",
-    title: "Luxury Salons, Spa & Grooming Packages",
-    subtitle: "Pamper yourself with curated salon packages, grooming, and skincare offers.",
-    badgeText: "BEAUTY & SALON",
-    category: "Beauty",
-    categoryKey: "BEAUTY_PERSONAL_CARE",
-    ctaText: "Book Packages →",
-    defaultOrder: 5,
-    accentColor: "#EC4899",
-    badgeBg: "rgba(255, 255, 255, 0.25)",
-    badgeTextCol: "#FFFFFF",
-    bgGradient: "linear-gradient(135deg, #DB2777 0%, #BE185D 60%, #9D174D 100%)",
-    description: "Default promotional slide highlighting beauty salons, spas, grooming centers, and cosmetic stores.",
-    placementType: "Category Feature Slide",
-    defaultTags: ["Category: Beauty", "Salons & Spas"]
-  },
-  {
-    id: "default_slot_6_home_living",
-    slotKey: "home_living",
-    slotNumber: 7,
-    slotName: "Slot 7: Home & Living Decor",
-    title: "Furniture, Decor & Kitchen Upgrades",
-    subtitle: "Transform your living spaces with deals on home decor, furnishing, and kitchenware.",
-    badgeText: "HOME & LIVING",
-    category: "Home & Living",
-    categoryKey: "HOME_LIVING",
-    ctaText: "Discover Home Deals →",
-    defaultOrder: 6,
-    accentColor: "#D97706",
-    badgeBg: "rgba(255, 255, 255, 0.25)",
-    badgeTextCol: "#FFFFFF",
-    bgGradient: "linear-gradient(135deg, #B45309 0%, #92400E 60%, #78350F 100%)",
-    description: "Default promotional slide highlighting furniture, interior decor, kitchenware, and furnishing.",
-    placementType: "Category Feature Slide",
-    defaultTags: ["Category: Home & Living", "Furnishing & Decor"]
-  },
-  {
-    id: "default_slot_7_it_services",
-    slotKey: "it_services",
-    slotNumber: 8,
-    slotName: "Slot 8: IT & Digital Services",
-    title: "Digital Services, Repairs & Software Solutions",
-    subtitle: "Laptop/computer servicing, mobile repairs, IT support & custom software services.",
-    badgeText: "DIGITAL SERVICES",
-    category: "IT & Services",
-    categoryKey: "IT_SERVICES",
-    ctaText: "Get Servicing →",
-    defaultOrder: 7,
-    accentColor: "#0D9488",
-    badgeBg: "rgba(255, 255, 255, 0.25)",
-    badgeTextCol: "#FFFFFF",
-    bgGradient: "linear-gradient(135deg, #0F766E 0%, #115E59 60%, #134E4A 100%)",
-    description: "Default promotional slide highlighting IT repair shops, mobile servicing, and digital solutions.",
-    placementType: "Category Feature Slide",
-    defaultTags: ["Category: IT & Services", "Tech Repair & Software"]
-  },
-  {
-    id: "default_slot_8_wellness",
-    slotKey: "wellness",
-    slotNumber: 9,
-    slotName: "Slot 9: Wellness & Health",
-    title: "Health, Fitness & Pharmacy Offers",
-    subtitle: "Gym memberships, healthcare checkups, diagnostic discounts & pharmacy deals.",
-    badgeText: "HEALTH & WELLNESS",
-    category: "Wellness",
-    categoryKey: "WELLNESS",
-    ctaText: "Explore Wellness →",
-    defaultOrder: 8,
-    accentColor: "#059669",
-    badgeBg: "rgba(255, 255, 255, 0.25)",
-    badgeTextCol: "#FFFFFF",
-    bgGradient: "linear-gradient(135deg, #047857 0%, #065F46 60%, #064E3B 100%)",
-    description: "Default promotional slide highlighting gyms, fitness centers, diagnostic labs, and pharmacies.",
-    placementType: "Category Feature Slide",
-    defaultTags: ["Category: Wellness", "Fitness & Healthcare"]
-  },
-  {
-    id: "default_slot_9_retail",
-    slotKey: "retail",
-    slotNumber: 10,
-    slotName: "Slot 10: Neighborhood Retail Specials",
-    title: "Support Local: Verified Neighborhood Merchants",
-    subtitle: "Exclusive in-store discounts and cashback rewards when shopping at nearby partner stores.",
-    badgeText: "LOCAL EXCLUSIVE",
-    category: "Store Specials",
-    categoryKey: "DEFAULT",
-    ctaText: "Find Local Stores →",
-    defaultOrder: 9,
-    accentColor: "#EA580C",
-    badgeBg: "rgba(255, 255, 255, 0.25)",
-    badgeTextCol: "#FFFFFF",
-    bgGradient: "linear-gradient(135deg, #EA580C 0%, #C2410C 60%, #9A3412 100%)",
-    description: "Default promotional slide promoting local neighborhood partner stores and SmartShopper Pass benefits.",
-    placementType: "Category Feature Slide",
-    defaultTags: ["Local Stores", "SmartShopper Pass"]
+    description: "Customizable Promotional Slot 4. Runs default fashion & apparel collections until replaced by a custom promotional banner.",
+    placementType: "Promotional Slot 4",
+    defaultTags: ["Slot #4", "Replaceable", "Category: Fashion"],
+    isUniversal: false,
+    canReplace: true
   }
 ];
 
@@ -880,6 +793,11 @@ export const SscScreen: React.FC<SscScreenProps> = ({ isDark = false }) => {
   // Check if a default system banner is currently replaced by an active custom or SSM banner
   const getReplacingBanner = useCallback(
     (defaultBnr: DefaultSystemBanner): SscBanner | null => {
+      // Universal banner is permanent core branding and cannot be replaced
+      if (!defaultBnr.canReplace || defaultBnr.isUniversal) {
+        return null;
+      }
+
       // Find active, currently live banners
       const liveBanners = banners.filter((b) => {
         if (!b.isActive || b.status !== "active") return false;
@@ -890,11 +808,11 @@ export const SscScreen: React.FC<SscScreenProps> = ({ isDark = false }) => {
         return true;
       });
 
-      // Priority 1: Match on displayOrder
+      // Priority 1: Match on displayOrder (1, 2, 3, 4)
       const matchedByOrder = liveBanners.find((b) => b.displayOrder === defaultBnr.defaultOrder);
       if (matchedByOrder) return matchedByOrder;
 
-      // Priority 2: For category slides, match category in redirectTarget or title
+      // Priority 2: For category slots, match category in redirectTarget or title
       if (defaultBnr.category && defaultBnr.category !== "Universal") {
         const matchedByCat = liveBanners.find(
           (b) =>
@@ -903,12 +821,6 @@ export const SscScreen: React.FC<SscScreenProps> = ({ isDark = false }) => {
             b.title.toLowerCase().includes(defaultBnr.category.toLowerCase())
         );
         if (matchedByCat) return matchedByCat;
-      }
-
-      // Priority 3: For universal hero slot 0, if any active banner has displayOrder 0
-      if (defaultBnr.defaultOrder === 0) {
-        const heroBanner = liveBanners.find((b) => b.displayOrder === 0);
-        if (heroBanner) return heroBanner;
       }
 
       return null;
@@ -921,6 +833,7 @@ export const SscScreen: React.FC<SscScreenProps> = ({ isDark = false }) => {
     let running = 0;
     let replaced = 0;
     DEFAULT_SSC_BANNERS.forEach((db) => {
+      if (!db.canReplace) return; // Universal is permanent
       const repl = getReplacingBanner(db);
       if (repl) {
         replaced++;
@@ -928,7 +841,7 @@ export const SscScreen: React.FC<SscScreenProps> = ({ isDark = false }) => {
         running++;
       }
     });
-    return { running, replaced, total: DEFAULT_SSC_BANNERS.length };
+    return { running, replaced, total: DEFAULT_SSC_BANNERS.length, replaceableTotal: 4 };
   }, [getReplacingBanner]);
 
   // Filter default system banners
@@ -937,8 +850,14 @@ export const SscScreen: React.FC<SscScreenProps> = ({ isDark = false }) => {
       const repl = getReplacingBanner(db);
       const isReplaced = !!repl;
 
-      if (defaultBannerFilter === "running" && isReplaced) return false;
-      if (defaultBannerFilter === "replaced" && !isReplaced) return false;
+      if (defaultBannerFilter === "running") {
+        if (!db.canReplace) return true; // Universal is always running
+        if (isReplaced) return false;
+      }
+      if (defaultBannerFilter === "replaced") {
+        if (!db.canReplace) return false; // Universal can never be replaced
+        if (!isReplaced) return false;
+      }
 
       if (defaultBannerSearch.trim()) {
         const q = defaultBannerSearch.toLowerCase().trim();
@@ -995,6 +914,10 @@ export const SscScreen: React.FC<SscScreenProps> = ({ isDark = false }) => {
 
   // Open modal to replace a specific default system banner with a custom banner
   const handleReplaceDefaultBanner = (defaultBnr: DefaultSystemBanner) => {
+    if (!defaultBnr.canReplace || defaultBnr.isUniversal) {
+      alert("The Universal banner is permanent and cannot be replaced.");
+      return;
+    }
     setEditingBannerId(null);
     setReplacingDefaultBanner(defaultBnr);
     setFormErrors({});
@@ -1004,7 +927,7 @@ export const SscScreen: React.FC<SscScreenProps> = ({ isDark = false }) => {
     const future = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000); // 14 days active window
 
     setBannerForm({
-      title: defaultBnr.category === "Universal" ? "Special Spotlight Deals" : `${defaultBnr.category} Festive Deals`,
+      title: `${defaultBnr.category} Deals & Offers`,
       subtitle: defaultBnr.subtitle,
       imageUrl: "",
       storagePath: "",
@@ -1012,8 +935,8 @@ export const SscScreen: React.FC<SscScreenProps> = ({ isDark = false }) => {
       sourceRequestId: "",
       merchantId: "",
       merchantName: "",
-      redirectType: defaultBnr.placementType === "Category Feature Slide" ? "category" : "none",
-      redirectTarget: defaultBnr.category !== "Universal" ? defaultBnr.category : "",
+      redirectType: "category",
+      redirectTarget: defaultBnr.category,
       status: "active",
       startAtIST: toInputDateTimeString(now.toISOString()),
       endAtIST: toInputDateTimeString(future.toISOString()),
@@ -1739,7 +1662,7 @@ export const SscScreen: React.FC<SscScreenProps> = ({ isDark = false }) => {
                         )}
                       </View>
                       <Text style={[styles.defaultSummarySub, { color: colors.textSub }]}>
-                        SSC runs 10 default banners across slots and categories when no custom banner is active. Review default banners to know exactly what to replace.
+                        SmartShopper runs 5 default banners: 1 Permanent Universal Core banner (fixed) + 4 Customizable Promotional Slots (Slots 1–4) that can be replaced with custom banners.
                       </Text>
                     </View>
                     <TouchableOpacity
@@ -2157,7 +2080,7 @@ export const SscScreen: React.FC<SscScreenProps> = ({ isDark = false }) => {
                   <View style={styles.defaultHeaderHintBox}>
                     <Info size={13} color={colors.accent} style={{ marginRight: 6 }} />
                     <Text style={[styles.defaultHeaderHintText, { color: colors.textSub }]}>
-                      Click &quot;Replace with Custom Banner&quot; on any slot to launch a custom banner for that slot.
+                      Universal banner is permanent &amp; fixed. Slots 1–4 can be replaced with custom promotional banners.
                     </Text>
                   </View>
                 </View>
@@ -2186,7 +2109,11 @@ export const SscScreen: React.FC<SscScreenProps> = ({ isDark = false }) => {
                           styles.defaultBannerCard,
                           {
                             backgroundColor: colors.cardBg,
-                            borderColor: isReplaced ? (isDark ? "#7E22CE" : "#C084FC") : colors.border
+                            borderColor: !db.canReplace
+                              ? (isDark ? "#EA580C" : "#FDBA74")
+                              : isReplaced
+                              ? (isDark ? "#7E22CE" : "#C084FC")
+                              : colors.border
                           }
                         ]}
                       >
@@ -2204,7 +2131,7 @@ export const SscScreen: React.FC<SscScreenProps> = ({ isDark = false }) => {
                           <View style={styles.defaultBannerVisualHeader}>
                             <View style={[styles.slotBadge, { backgroundColor: "rgba(15, 23, 42, 0.85)" }]}>
                               <Text style={styles.slotBadgeText}>
-                                SLOT #{db.slotNumber} &bull; {db.placementType.toUpperCase()}
+                                {!db.canReplace ? "UNIVERSAL CORE" : `SLOT #${db.slotNumber}`} &bull; {db.placementType.toUpperCase()}
                               </Text>
                             </View>
 
@@ -2212,12 +2139,20 @@ export const SscScreen: React.FC<SscScreenProps> = ({ isDark = false }) => {
                               style={[
                                 styles.defaultStatusBadge,
                                 {
-                                  backgroundColor: isReplaced ? "#7E22CE" : "#059669"
+                                  backgroundColor: !db.canReplace
+                                    ? "#EA580C"
+                                    : isReplaced
+                                    ? "#7E22CE"
+                                    : "#059669"
                                 }
                               ]}
                             >
                               <Text style={styles.defaultStatusBadgeText}>
-                                {isReplaced ? "REPLACED BY CUSTOM" : "ACTIVE (RUNNING DEFAULT)"}
+                                {!db.canReplace
+                                  ? "PERMANENT (CORE UNIVERSAL)"
+                                  : isReplaced
+                                  ? "REPLACED BY CUSTOM"
+                                  : "ACTIVE (RUNNING DEFAULT)"}
                               </Text>
                             </View>
                           </View>
@@ -2269,7 +2204,7 @@ export const SscScreen: React.FC<SscScreenProps> = ({ isDark = false }) => {
                             <View style={[styles.destBadge, { backgroundColor: colors.inputBg }]}>
                               <Hash size={10} color={colors.textSub} style={{ marginRight: 3 }} />
                               <Text style={[styles.destBadgeText, { color: colors.textSub }]}>
-                                Priority #{db.defaultOrder}
+                                {!db.canReplace ? "Core Priority" : `Slot #${db.slotNumber}`}
                               </Text>
                             </View>
                           </View>
@@ -2279,17 +2214,23 @@ export const SscScreen: React.FC<SscScreenProps> = ({ isDark = false }) => {
                             style={[
                               styles.defaultStatusBox,
                               {
-                                backgroundColor: isReplaced
+                                backgroundColor: !db.canReplace
+                                  ? (isDark ? "rgba(234, 88, 12, 0.12)" : "#FFF7ED")
+                                  : isReplaced
                                   ? (isDark ? "rgba(126, 34, 206, 0.15)" : "#FAF5FF")
                                   : (isDark ? "rgba(5, 150, 105, 0.12)" : "#ECFDF5"),
-                                borderColor: isReplaced
+                                borderColor: !db.canReplace
+                                  ? (isDark ? "rgba(234, 88, 12, 0.3)" : "#FED7AA")
+                                  : isReplaced
                                   ? (isDark ? "rgba(126, 34, 206, 0.3)" : "#E9D5FF")
                                   : (isDark ? "rgba(5, 150, 105, 0.3)" : "#A7F3D0")
                               }
                             ]}
                           >
                             <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 3 }}>
-                              {isReplaced ? (
+                              {!db.canReplace ? (
+                                <Lock size={12} color="#EA580C" style={{ marginRight: 5 }} />
+                              ) : isReplaced ? (
                                 <RefreshCw size={12} color="#7E22CE" style={{ marginRight: 5 }} />
                               ) : (
                                 <CheckCircle2 size={12} color="#059669" style={{ marginRight: 5 }} />
@@ -2297,14 +2238,28 @@ export const SscScreen: React.FC<SscScreenProps> = ({ isDark = false }) => {
                               <Text
                                 style={[
                                   styles.defaultStatusBoxTitle,
-                                  { color: isReplaced ? "#7E22CE" : "#059669" }
+                                  {
+                                    color: !db.canReplace
+                                      ? "#EA580C"
+                                      : isReplaced
+                                      ? "#7E22CE"
+                                      : "#059669"
+                                  }
                                 ]}
                               >
-                                {isReplaced ? "Replaced by Active Custom Banner" : "Currently Running as Default Fallback"}
+                                {!db.canReplace
+                                  ? "Permanent Core Universal Banner"
+                                  : isReplaced
+                                  ? "Replaced by Active Custom Banner"
+                                  : "Currently Running as Default Fallback"}
                               </Text>
                             </View>
 
-                            {isReplaced && matchedRepl ? (
+                            {!db.canReplace ? (
+                              <Text style={[styles.defaultStatusBoxSub, { color: colors.textSub }]}>
+                                Core SmartShopper branding banner. Always active for all shoppers and cannot be replaced or deleted.
+                              </Text>
+                            ) : isReplaced && matchedRepl ? (
                               <Text style={[styles.defaultStatusBoxSub, { color: colors.textMain }]} numberOfLines={2}>
                                 Custom Replacement: &quot;{matchedRepl.title}&quot; &bull; Priority #{matchedRepl.displayOrder}
                                 {matchedRepl.merchantName ? ` (${matchedRepl.merchantName})` : ""}
@@ -2318,19 +2273,36 @@ export const SscScreen: React.FC<SscScreenProps> = ({ isDark = false }) => {
 
                           {/* Action Buttons Row */}
                           <View style={[styles.bannerActionsBottom, { borderTopColor: colors.border }]}>
-                            <TouchableOpacity
-                              style={[
-                                styles.replaceDefaultBtn,
-                                { backgroundColor: colors.accent }
-                              ]}
-                              onPress={() => handleReplaceDefaultBanner(db)}
-                              activeOpacity={0.84}
-                            >
-                              <Plus size={13} color="#FFFFFF" style={{ marginRight: 5 }} />
-                              <Text style={styles.replaceDefaultBtnText}>
-                                {isReplaced ? "Replace Again" : "Replace with Custom Banner"}
-                              </Text>
-                            </TouchableOpacity>
+                            {!db.canReplace ? (
+                              <View
+                                style={[
+                                  styles.lockedUniversalBadge,
+                                  {
+                                    backgroundColor: isDark ? "rgba(234, 88, 12, 0.15)" : "#FFF7ED",
+                                    borderColor: isDark ? "rgba(234, 88, 12, 0.3)" : "#FFEDD5"
+                                  }
+                                ]}
+                              >
+                                <Lock size={12} color="#EA580C" style={{ marginRight: 5 }} />
+                                <Text style={[styles.lockedUniversalText, { color: "#EA580C" }]}>
+                                  Universal (Non-replaceable)
+                                </Text>
+                              </View>
+                            ) : (
+                              <TouchableOpacity
+                                style={[
+                                  styles.replaceDefaultBtn,
+                                  { backgroundColor: colors.accent }
+                                ]}
+                                onPress={() => handleReplaceDefaultBanner(db)}
+                                activeOpacity={0.84}
+                              >
+                                <Plus size={13} color="#FFFFFF" style={{ marginRight: 5 }} />
+                                <Text style={styles.replaceDefaultBtnText}>
+                                  {isReplaced ? "Replace Again" : "Replace with Custom Banner"}
+                                </Text>
+                              </TouchableOpacity>
+                            )}
 
                             <TouchableOpacity
                               style={[styles.bannerActionBtn, { borderColor: colors.border, flex: 0, paddingHorizontal: 12 }]}
@@ -3429,7 +3401,11 @@ export const SscScreen: React.FC<SscScreenProps> = ({ isDark = false }) => {
                   </Text>
                   <Text style={styles.mockupMetaRow}>
                     <Text style={{ fontWeight: "700" }}>Current Status: </Text>
-                    {getReplacingBanner(previewingDefaultBanner) ? "Replaced by Active Custom Banner" : "Active (Running Default Fallback)"}
+                    {!previewingDefaultBanner.canReplace
+                      ? "Permanent Core Universal Banner (Non-replaceable)"
+                      : getReplacingBanner(previewingDefaultBanner)
+                      ? "Replaced by Active Custom Banner"
+                      : "Active (Running Default Fallback)"}
                   </Text>
                   <Text style={styles.mockupMetaRow}>
                     <Text style={{ fontWeight: "700" }}>Role: </Text>
@@ -4952,6 +4928,21 @@ const styles = StyleSheet.create({
   replaceDefaultBtnText: {
     color: "#FFFFFF",
     fontSize: 11.5,
+    fontWeight: "800"
+  },
+  lockedUniversalBadge: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 7,
+    paddingHorizontal: 10,
+    borderRadius: 7,
+    borderWidth: 1,
+    marginRight: 6
+  },
+  lockedUniversalText: {
+    fontSize: 11,
     fontWeight: "800"
   },
 
