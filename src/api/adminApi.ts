@@ -1,4 +1,36 @@
 import { supabase } from "./supabase";
+import { SeasonalThemeId, resolveSeasonalTheme } from "../theme/seasonalTheme";
+
+export type { SeasonalThemeId };
+
+export interface SeasonalThemeOverrideState {
+  mode: "automatic" | "manual";
+  appliedThemeId: SeasonalThemeId;
+  manualThemeId: SeasonalThemeId | null;
+  autoDetectedTheme: SeasonalThemeId;
+  updatedBy: string;
+  updatedByRole?: string;
+  updatedAt: string;
+}
+
+export interface SetSeasonalThemeOverridePayload {
+  mode: "automatic" | "manual";
+  themeId?: SeasonalThemeId;
+  adminEmail?: string;
+  adminId?: string;
+  reason?: string;
+}
+
+export interface SetSeasonalThemeOverrideResult {
+  success: boolean;
+  error?: string;
+  mode?: "automatic" | "manual";
+  activeTheme?: SeasonalThemeId;
+  manualTheme?: SeasonalThemeId | null;
+  autoDetectedTheme?: SeasonalThemeId;
+  updatedAt?: string;
+  updatedBy?: string;
+}
 
 export interface SscBanner {
   id: string;
@@ -2384,5 +2416,100 @@ export const AdminApi = {
       console.warn("[AdminApi] getSudoAuditLogs failed:", err);
       return [];
     }
+  },
+
+  /**
+   * Fetch current global seasonal theme configuration
+   */
+  async getSeasonalThemeConfig(): Promise<SeasonalThemeOverrideState> {
+    try {
+      const { data, error } = await supabase.rpc("get_seasonal_theme_config");
+      if (error) {
+        console.warn("[AdminApi] get_seasonal_theme_config error:", error);
+      }
+      if (data) {
+        return {
+          mode: data.mode || "automatic",
+          appliedThemeId: (data.appliedThemeId as SeasonalThemeId) || resolveSeasonalTheme().id,
+          manualThemeId: (data.manualThemeId as SeasonalThemeId) || null,
+          autoDetectedTheme: (data.autoDetectedTheme as SeasonalThemeId) || resolveSeasonalTheme().id,
+          updatedBy: data.updatedBy || "System",
+          updatedByRole: data.updatedByRole || "super_admin",
+          updatedAt: data.updatedAt || new Date().toISOString()
+        };
+      }
+    } catch (e) {
+      console.warn("[AdminApi] getSeasonalThemeConfig fallback:", e);
+    }
+
+    const autoTheme = resolveSeasonalTheme();
+    return {
+      mode: "automatic",
+      appliedThemeId: autoTheme.id,
+      manualThemeId: null,
+      autoDetectedTheme: autoTheme.id,
+      updatedBy: "System",
+      updatedByRole: "super_admin",
+      updatedAt: new Date().toISOString()
+    };
+  },
+
+  /**
+   * Set seasonal theme override mode (strictly restricted to Founder / Super Admin)
+   */
+  async setSeasonalThemeOverride(payload: SetSeasonalThemeOverridePayload): Promise<SetSeasonalThemeOverrideResult> {
+    try {
+      const { data, error } = await supabase.rpc("admin_set_seasonal_theme_override", {
+        p_payload: {
+          mode: payload.mode,
+          themeId: payload.themeId,
+          adminEmail: payload.adminEmail || "founder@jrina.online",
+          adminId: payload.adminId || "founder_super_admin",
+          reason: payload.reason || (payload.mode === "manual" ? `Manual theme override to ${payload.themeId}` : "Restored automatic seasonal schedule")
+        }
+      });
+
+      if (error) {
+        console.error("[AdminApi] admin_set_seasonal_theme_override failed:", error);
+        return { success: false, error: error.message };
+      }
+
+      return data as SetSeasonalThemeOverrideResult;
+    } catch (err: any) {
+      console.error("[AdminApi] setSeasonalThemeOverride exception:", err);
+      return { success: false, error: err?.message || "Failed to update seasonal theme override." };
+    }
+  },
+
+  /**
+   * Subscribe to seasonal theme changes via Supabase Realtime
+   */
+  subscribeToSeasonalThemeConfig(callback: (config: SeasonalThemeOverrideState) => void): () => void {
+    const channel = supabase
+      .channel("app_seasonal_theme_config_changes")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "app_seasonal_theme_config" },
+        (payload) => {
+          const row = payload.new as any;
+          if (row) {
+            const autoTheme = resolveSeasonalTheme();
+            callback({
+              mode: row.mode || "automatic",
+              appliedThemeId: (row.applied_theme_id as SeasonalThemeId) || autoTheme.id,
+              manualThemeId: (row.manual_theme_id as SeasonalThemeId) || null,
+              autoDetectedTheme: autoTheme.id,
+              updatedBy: row.updated_by || "System",
+              updatedByRole: row.updated_by_role || "super_admin",
+              updatedAt: row.updated_at || new Date().toISOString()
+            });
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }
 };

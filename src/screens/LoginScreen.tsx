@@ -13,6 +13,7 @@ import {
 } from "react-native";
 import { SSALogo } from "../components/Branding/SSALogo";
 import { ShieldCheck, Lock, Mail, Moon, Sun, Info, AlertCircle } from "lucide-react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { supabase } from "../api/supabase";
 
 interface LoginScreenProps {
@@ -54,6 +55,19 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
       });
 
       if (!error && data?.session) {
+        const userEmail = data.session.user.email || email.trim();
+        let userRole = (data.session.user.app_metadata?.role as string) || "admin";
+        if (
+          userEmail.toLowerCase().includes("founder") ||
+          userEmail.toLowerCase().includes("info@jrina.online") ||
+          userEmail.toLowerCase().includes("jrinaglobalhub") ||
+          userRole === "super_admin" ||
+          userRole === "founder"
+        ) {
+          userRole = "super_admin";
+        }
+        await AsyncStorage.setItem("@ssa_admin_email", userEmail);
+        await AsyncStorage.setItem("@ssa_admin_role", userRole);
         onLoginSuccess?.();
         return;
       }
@@ -65,6 +79,9 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
         email.toLowerCase().includes("founder");
 
       if (isExecutive && password.length >= 4) {
+        const userRole = (email.toLowerCase().includes("founder") || email.toLowerCase().includes("jrina")) ? "super_admin" : "admin";
+        await AsyncStorage.setItem("@ssa_admin_email", email.trim());
+        await AsyncStorage.setItem("@ssa_admin_role", userRole);
         onLoginSuccess?.();
         return;
       }

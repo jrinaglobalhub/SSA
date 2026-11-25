@@ -83,7 +83,7 @@ export default function App() {
 
   const handleSignOut = async () => {
     try {
-      await AsyncStorage.removeItem(AUTH_STORAGE_KEY);
+      await AsyncStorage.multiRemove([AUTH_STORAGE_KEY, "@ssa_admin_email", "@ssa_admin_role"]);
     } catch {}
     setCurrentScreen("login");
   };

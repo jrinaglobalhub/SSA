@@ -20,6 +20,7 @@ import {
   Share2
 } from "lucide-react-native";
 import { AdminApi, OverviewMetrics } from "../api/adminApi";
+import { SeasonalThemeControl } from "../components/SeasonalThemeControl";
 
 interface OverviewScreenProps {
   isDark?: boolean;
@@ -182,6 +183,9 @@ export const OverviewScreen: React.FC<OverviewScreenProps> = ({
           </TouchableOpacity>
         </View>
       )}
+
+      {/* Season Theme Control (Founder / Super Admin ONLY) */}
+      <SeasonalThemeControl isDark={isDark} />
 
       {/* Quick Nav Cards */}
       <View style={[styles.navSection, { backgroundColor: colors.cardBg, borderColor: colors.border }]}>
