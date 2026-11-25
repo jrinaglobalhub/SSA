@@ -34,7 +34,7 @@ export interface SetSeasonalThemeOverrideResult {
 
 export interface SscBanner {
   id: string;
-  title: string;
+  title?: string;
   subtitle?: string;
   imageUrl: string;
   storagePath?: string;
@@ -2099,7 +2099,7 @@ export const AdminApi = {
       }
       return (data || []).map((b: any) => ({
         id: b.id,
-        title: b.title,
+        title: b.title || "",
         subtitle: b.subtitle || "",
         imageUrl: b.image_url,
         storagePath: b.storage_path || undefined,
@@ -2148,7 +2148,7 @@ export const AdminApi = {
       const { data, error } = await supabase.rpc("save_ssc_banner", {
         p_banner: {
           id: banner.id,
-          title: banner.title,
+          title: banner.title || "",
           subtitle: banner.subtitle,
           imageUrl: banner.imageUrl,
           storagePath: banner.storagePath,

@@ -755,7 +755,7 @@ export const SscScreen: React.FC<SscScreenProps> = ({ isDark = false }) => {
     // Search filter
     if (bannerSearch.trim()) {
       const q = bannerSearch.toLowerCase().trim();
-      const matchTitle = b.title.toLowerCase().includes(q);
+      const matchTitle = (b.title || "").toLowerCase().includes(q);
       const matchSub = (b.subtitle || "").toLowerCase().includes(q);
       const matchMerchant = (b.merchantName || "").toLowerCase().includes(q);
       const matchTarget = (b.targetName || b.targetId || b.redirectTarget || "").toLowerCase().includes(q);
@@ -826,7 +826,7 @@ export const SscScreen: React.FC<SscScreenProps> = ({ isDark = false }) => {
           (b) =>
             (b.redirectType === "category" &&
               b.redirectTarget?.toLowerCase() === defaultBnr.category.toLowerCase()) ||
-            b.title.toLowerCase().includes(defaultBnr.category.toLowerCase())
+            (b.title || "").toLowerCase().includes(defaultBnr.category.toLowerCase())
         );
         if (matchedByCat) return matchedByCat;
       }
@@ -880,7 +880,7 @@ export const SscScreen: React.FC<SscScreenProps> = ({ isDark = false }) => {
         const matchSlot = db.slotName.toLowerCase().includes(q);
         const matchCat = db.category.toLowerCase().includes(q);
         const matchSub = db.subtitle.toLowerCase().includes(q);
-        const matchRepl = repl ? repl.title.toLowerCase().includes(q) : false;
+        const matchRepl = repl ? (repl.title || "").toLowerCase().includes(q) : false;
         return matchTitle || matchSlot || matchCat || matchSub || matchRepl;
       }
 
@@ -976,7 +976,7 @@ export const SscScreen: React.FC<SscScreenProps> = ({ isDark = false }) => {
     setUploadProgress(null);
 
     setBannerForm({
-      title: banner.title,
+      title: banner.title || "",
       subtitle: banner.subtitle || "",
       imageUrl: banner.imageUrl,
       storagePath: banner.storagePath || "",
@@ -1110,13 +1110,13 @@ export const SscScreen: React.FC<SscScreenProps> = ({ isDark = false }) => {
     };
 
     if (Platform.OS === "web") {
-      if (window.confirm(`Are you sure you want to remove banner "${banner.title}" from SSC?`)) {
+      if (window.confirm(`Are you sure you want to remove banner "${banner.title || "Custom Banner"}" from SSC?`)) {
         confirmAction();
       }
     } else {
       Alert.alert(
         "Confirm Banner Removal",
-        `Are you sure you want to remove banner "${banner.title}" from SSC?`,
+        `Are you sure you want to remove banner "${banner.title || "Custom Banner"}" from SSC?`,
         [
           { text: "Cancel", style: "cancel" },
           { text: "Delete", style: "destructive", onPress: confirmAction }
@@ -1128,9 +1128,6 @@ export const SscScreen: React.FC<SscScreenProps> = ({ isDark = false }) => {
   // Save banner (Draft or Published)
   const handleSaveBanner = async (saveStatus: "draft" | "active") => {
     const errors: Record<string, string> = {};
-    if (!bannerForm.title.trim()) {
-      errors.title = "Banner title is required.";
-    }
     if (!bannerForm.imageUrl.trim()) {
       errors.imageUrl = "Banner image is required (upload or provide URL).";
     }
@@ -1155,7 +1152,7 @@ export const SscScreen: React.FC<SscScreenProps> = ({ isDark = false }) => {
 
       const payload: Partial<SscBanner> = {
         id: editingBannerId || undefined,
-        title: bannerForm.title.trim(),
+        title: bannerForm.title.trim() || "",
         subtitle: bannerForm.subtitle.trim() || undefined,
         imageUrl: bannerForm.imageUrl.trim(),
         storagePath: bannerForm.storagePath || undefined,
@@ -1923,7 +1920,7 @@ export const SscScreen: React.FC<SscScreenProps> = ({ isDark = false }) => {
                                 style={[styles.bannerTitleText, { color: colors.textMain }]}
                                 numberOfLines={1}
                               >
-                                {item.title}
+                                {item.title || "Untitled Banner"}
                               </Text>
                             </View>
 
@@ -2247,7 +2244,7 @@ export const SscScreen: React.FC<SscScreenProps> = ({ isDark = false }) => {
                                 {!db.canReplace
                                   ? db.badgeText
                                   : isReplaced && matchedRepl
-                                  ? matchedRepl.title.toUpperCase().slice(0, 24)
+                                  ? (matchedRepl.title ? matchedRepl.title.toUpperCase().slice(0, 24) : `${db.category.toUpperCase()} ACTIVE`)
                                   : `${db.category.toUpperCase()} SLOT`}
                               </Text>
                             </View>
@@ -2256,7 +2253,7 @@ export const SscScreen: React.FC<SscScreenProps> = ({ isDark = false }) => {
                               {!db.canReplace
                                 ? db.title
                                 : isReplaced && matchedRepl
-                                ? matchedRepl.title
+                                ? (matchedRepl.title || `${db.category} - Custom Banner Active`)
                                 : `${db.category} - Slot Available`}
                             </Text>
 
@@ -2361,7 +2358,7 @@ export const SscScreen: React.FC<SscScreenProps> = ({ isDark = false }) => {
                               </Text>
                             ) : isReplaced && matchedRepl ? (
                               <Text style={[styles.defaultStatusBoxSub, { color: colors.textMain }]} numberOfLines={2}>
-                                Active: &quot;{matchedRepl.title}&quot; &bull; Priority #{matchedRepl.displayOrder}
+                                Active: &quot;{matchedRepl.title || "Custom Banner"}&quot; &bull; Priority #{matchedRepl.displayOrder}
                                 {matchedRepl.merchantName ? ` (${matchedRepl.merchantName})` : ""}
                               </Text>
                             ) : (
@@ -2681,7 +2678,7 @@ export const SscScreen: React.FC<SscScreenProps> = ({ isDark = false }) => {
                     </View>
                     <Text style={[styles.replacingCalloutText, { color: colors.textMain }]}>
                       Category: {replacingDefaultBanner.category} &bull; Slot #{replacingDefaultBanner.slotNumber}
-                      {activeRepl ? ` &bull; Currently Active: "${activeRepl.title}"` : " (Currently Empty Slot)"}
+                      {activeRepl ? ` &bull; Currently Active: "${activeRepl.title || "Custom Banner"}"` : " (Currently Empty Slot)"}
                     </Text>
                     <Text style={[styles.replacingCalloutSub, { color: colors.textSub }]}>
                       {activeRepl
@@ -2763,7 +2760,7 @@ export const SscScreen: React.FC<SscScreenProps> = ({ isDark = false }) => {
               {/* Title & Subtitle */}
               <View style={styles.formGroup}>
                 <Text style={[styles.formLabel, { color: colors.textMain }]}>
-                  Banner Title <Text style={{ color: "#DC2626" }}>*</Text>
+                  Banner Title (Optional)
                 </Text>
                 <TextInput
                   style={[
@@ -2774,7 +2771,7 @@ export const SscScreen: React.FC<SscScreenProps> = ({ isDark = false }) => {
                       color: colors.textMain
                     }
                   ]}
-                  placeholder="e.g. Festival Mega Bonanza, 50% Off Top Brands"
+                  placeholder="e.g. Festival Mega Bonanza, 50% Off Top Brands (Optional)"
                   placeholderTextColor={colors.textSub}
                   value={bannerForm.title}
                   onChangeText={(val) => {
@@ -3444,18 +3441,20 @@ export const SscScreen: React.FC<SscScreenProps> = ({ isDark = false }) => {
                     style={StyleSheet.absoluteFill}
                     resizeMode="cover"
                   />
-                  {(previewingBanner.title || previewingBanner.subtitle) && (
+                  {(previewingBanner.title || previewingBanner.subtitle) ? (
                     <View style={styles.mockupScrim}>
-                      <Text style={styles.mockupBannerTitle} numberOfLines={1}>
-                        {previewingBanner.title}
-                      </Text>
+                      {previewingBanner.title ? (
+                        <Text style={styles.mockupBannerTitle} numberOfLines={1}>
+                          {previewingBanner.title}
+                        </Text>
+                      ) : null}
                       {previewingBanner.subtitle ? (
                         <Text style={styles.mockupBannerSubtitle} numberOfLines={1}>
                           {previewingBanner.subtitle}
                         </Text>
                       ) : null}
                     </View>
-                  )}
+                  ) : null}
                 </View>
 
                 {/* Mockup Meta Info */}
