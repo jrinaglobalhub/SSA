@@ -56,6 +56,8 @@ import {
   PlayCircle,
   Ban,
   ArrowRight,
+  ArrowUp,
+  ArrowDown,
   Sliders,
   Layout,
   Lock
@@ -526,6 +528,12 @@ export const SscScreen: React.FC<SscScreenProps> = ({ isDark = false }) => {
   useEffect(() => {
     if (activeSubTab === "banners") {
       loadBannerManagementData();
+      const unsubscribe = AdminApi.subscribeToSscBanners(() => {
+        loadBannerManagementData();
+      });
+      return () => {
+        unsubscribe();
+      };
     }
   }, [activeSubTab, loadBannerManagementData]);
 
@@ -1057,13 +1065,41 @@ export const SscScreen: React.FC<SscScreenProps> = ({ isDark = false }) => {
     }
   };
 
-  // Delete banner with confirmation
+  // Reorder banner display priority up or down atomically
+  const handleMoveBanner = async (banner: SscBanner, direction: "up" | "down") => {
+    const sorted = [...banners].sort((a, b) => a.displayOrder - b.displayOrder);
+    const currentIndex = sorted.findIndex((b) => b.id === banner.id);
+    if (currentIndex === -1) return;
+
+    const targetIndex = direction === "up" ? currentIndex - 1 : currentIndex + 1;
+    if (targetIndex < 0 || targetIndex >= sorted.length) return;
+
+    // Swap items in list
+    const updated = [...sorted];
+    const temp = updated[currentIndex];
+    updated[currentIndex] = updated[targetIndex];
+    updated[targetIndex] = temp;
+
+    // Optimistically update local display orders
+    const reorderedWithDisplay = updated.map((b, idx) => ({ ...b, displayOrder: idx }));
+    const prevList = [...banners];
+    setBanners(reorderedWithDisplay);
+
+    const orderedIds = reorderedWithDisplay.map((b) => b.id);
+    const success = await AdminApi.reorderSscBanners(orderedIds);
+    if (!success) {
+      setBanners(prevList);
+      Alert.alert("Reorder Failed", "Unable to persist new banner order to database.");
+    }
+  };
+
+  // Delete banner with confirmation and automated storage cleanup
   const handleDeleteBanner = (banner: SscBanner) => {
     const confirmAction = async () => {
       const prevList = [...banners];
       setBanners((prev) => prev.filter((b) => b.id !== banner.id));
 
-      const success = await AdminApi.deleteSscBanner(banner.id);
+      const success = await AdminApi.deleteSscBanner(banner.id, banner.storagePath);
       if (!success) {
         setBanners(prevList);
         Alert.alert("Delete Failed", "Unable to delete banner from database.");
@@ -1824,13 +1860,37 @@ export const SscScreen: React.FC<SscScreenProps> = ({ isDark = false }) => {
                               resizeMode="cover"
                             />
                             <View style={styles.bannerBadgeOverlay}>
-                              <View
-                                style={[
-                                  styles.orderBadge,
-                                  { backgroundColor: "rgba(15, 23, 42, 0.85)" }
-                                ]}
-                              >
-                                <Text style={styles.orderBadgeText}>Priority #{item.displayOrder}</Text>
+                              <View style={{ flexDirection: "row", alignItems: "center" }}>
+                                <View
+                                  style={[
+                                    styles.orderBadge,
+                                    { backgroundColor: "rgba(15, 23, 42, 0.85)" }
+                                  ]}
+                                >
+                                  <Text style={styles.orderBadgeText}>Priority #{item.displayOrder}</Text>
+                                </View>
+
+                                {/* Quick Reorder Controls */}
+                                <TouchableOpacity
+                                  style={[styles.reorderBtnSmall, { marginLeft: 5 }]}
+                                  onPress={(e) => {
+                                    e.stopPropagation?.();
+                                    handleMoveBanner(item, "up");
+                                  }}
+                                  activeOpacity={0.7}
+                                >
+                                  <ArrowUp size={11} color="#FFFFFF" />
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                  style={[styles.reorderBtnSmall, { marginLeft: 3 }]}
+                                  onPress={(e) => {
+                                    e.stopPropagation?.();
+                                    handleMoveBanner(item, "down");
+                                  }}
+                                  activeOpacity={0.7}
+                                >
+                                  <ArrowDown size={11} color="#FFFFFF" />
+                                </TouchableOpacity>
                               </View>
 
                               <View
@@ -4176,6 +4236,16 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 10,
     fontWeight: "800"
+  },
+  reorderBtnSmall: {
+    backgroundColor: "rgba(15, 23, 42, 0.85)",
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.3)"
   },
   statusBadgeSmall: {
     paddingHorizontal: 8,

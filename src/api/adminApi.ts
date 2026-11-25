@@ -2288,9 +2288,9 @@ export const AdminApi = {
   },
 
   /**
-   * Delete an SSC promotional banner
+   * Delete an SSC promotional banner and clean up associated storage file
    */
-  async deleteSscBanner(id: string): Promise<boolean> {
+  async deleteSscBanner(id: string, storagePath?: string): Promise<boolean> {
     try {
       const { data, error } = await supabase.rpc("delete_ssc_banner", {
         p_banner_id: id
@@ -2299,11 +2299,58 @@ export const AdminApi = {
         console.error("[AdminApi] deleteSscBanner error:", error);
         return false;
       }
+
+      // Clean up storage file via Storage API if recorded
+      const pathToRemove = storagePath || data?.storagePath;
+      if (pathToRemove) {
+        const cleanPath = pathToRemove.replace(/^ssc-banners\//, "");
+        await supabase.storage.from("ssc-banners").remove([cleanPath]).catch(() => {});
+      }
+
       return Boolean(data?.success);
     } catch (err) {
       console.error("[AdminApi] deleteSscBanner error:", err);
       return false;
     }
+  },
+
+  /**
+   * Atomically reorder SSC promotional banners in Supabase
+   */
+  async reorderSscBanners(orderedIds: string[]): Promise<boolean> {
+    try {
+      const { data, error } = await supabase.rpc("reorder_ssc_banners", {
+        p_ordered_ids: orderedIds
+      });
+      if (error) {
+        console.error("[AdminApi] reorderSscBanners error:", error);
+        return false;
+      }
+      return Boolean(data?.success);
+    } catch (err) {
+      console.error("[AdminApi] reorderSscBanners error:", err);
+      return false;
+    }
+  },
+
+  /**
+   * Subscribe to real-time changes on public.ssc_banners table
+   */
+  subscribeToSscBanners(onUpdate: () => void): () => void {
+    const channel = supabase
+      .channel("ssa_ssc_banners_realtime")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "ssc_banners" },
+        () => {
+          onUpdate();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   },
 
   /**
