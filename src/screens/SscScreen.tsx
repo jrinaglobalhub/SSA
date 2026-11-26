@@ -1183,10 +1183,22 @@ export const SscScreen: React.FC<SscScreenProps> = ({ isDark = false }) => {
         setReplacingDefaultBanner(null);
         loadBannerManagementData();
       } else {
-        Alert.alert("Save Error", res.error || "Could not save banner.");
+        const errorMsg = res.error || "Could not save banner.";
+        setFormErrors((prev) => ({ ...prev, submit: errorMsg }));
+        if (Platform.OS === "web") {
+          window.alert(`Save Error: ${errorMsg}`);
+        } else {
+          Alert.alert("Save Error", errorMsg);
+        }
       }
     } catch (err: any) {
-      Alert.alert("Save Error", err?.message || "An unexpected error occurred.");
+      const errorMsg = err?.message || "An unexpected error occurred.";
+      setFormErrors((prev) => ({ ...prev, submit: errorMsg }));
+      if (Platform.OS === "web") {
+        window.alert(`Save Error: ${errorMsg}`);
+      } else {
+        Alert.alert("Save Error", errorMsg);
+      }
     } finally {
       setSavingBanner(false);
     }
@@ -2688,6 +2700,28 @@ export const SscScreen: React.FC<SscScreenProps> = ({ isDark = false }) => {
                   </View>
                 );
               })()}
+
+              {/* Form Submission Error Callout */}
+              {formErrors.submit ? (
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    backgroundColor: "#FEF2F2",
+                    borderColor: "#FCA5A5",
+                    borderWidth: 1,
+                    borderRadius: 8,
+                    padding: 12,
+                    marginBottom: 16
+                  }}
+                >
+                  <AlertCircle size={16} color="#DC2626" style={{ marginRight: 8 }} />
+                  <Text style={{ color: "#B91C1C", fontSize: 13, fontWeight: "600", flex: 1 }}>
+                    {formErrors.submit}
+                  </Text>
+                </View>
+              ) : null}
+
               {/* Image Upload & Validation Section */}
               <View style={styles.formGroup}>
                 <Text style={[styles.formLabel, { color: colors.textMain }]}>
