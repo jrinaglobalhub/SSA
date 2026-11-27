@@ -70,6 +70,55 @@ export interface SscBanner {
   createdBy?: string;
 }
 
+export interface FestivalGreeting {
+  id: string;
+  festivalName: string;
+  title: string;
+  subtitle?: string;
+  message: string;
+  artworkUrl: string;
+  storagePath?: string;
+  senderText: string;
+  supportedLanguages: string[];
+  status: "draft" | "scheduled" | "published" | "disabled" | "expired";
+  isActive: boolean;
+  startAt: string;
+  endAt?: string | null;
+  buttonText: string;
+  createdAt: string;
+  updatedAt: string;
+  createdBy: string;
+  viewsCount: number;
+  dismissalsCount: number;
+}
+
+export interface AlertPopup {
+  id: string;
+  title: string;
+  message: string;
+  imageUrl?: string;
+  storagePath?: string;
+  popupType: "general" | "important" | "service" | "promotional" | "emergency" | "custom";
+  priority: "normal" | "high" | "critical";
+  targetAudience: string;
+  status: "draft" | "scheduled" | "published" | "disabled" | "expired";
+  isActive: boolean;
+  isDismissible: boolean;
+  displayFrequency: "once" | "until_acknowledged" | "every_session";
+  buttonText?: string;
+  buttonActionType: "none" | "screen" | "url";
+  buttonActionTarget?: string;
+  startAt: string;
+  endAt?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  createdBy: string;
+  deliveredCount: number;
+  viewedCount: number;
+  dismissedCount: number;
+  acknowledgedCount: number;
+}
+
 export interface ApprovedSsmBannerItem {
   requestId: string;
   storeId: string;
@@ -2553,6 +2602,319 @@ export const AdminApi = {
           }
         }
       )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  },
+
+  /**
+   * ============================================================================
+   * FESTIVAL GREETING CARDS MANAGEMENT
+   * ============================================================================
+   */
+
+  async getAllFestivalGreetings(): Promise<FestivalGreeting[]> {
+    try {
+      const { data, error } = await supabase
+        .from("ssc_festival_greetings")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.error("[AdminApi] getAllFestivalGreetings error:", error);
+        return [];
+      }
+
+      return (data || []).map((row: any) => ({
+        id: row.id,
+        festivalName: row.festival_name,
+        title: row.title,
+        subtitle: row.subtitle || "",
+        message: row.message,
+        artworkUrl: row.artwork_url,
+        storagePath: row.storage_path || undefined,
+        senderText: row.sender_text || "SmartShopper by JRINA Private Limited",
+        supportedLanguages: Array.isArray(row.supported_languages) ? row.supported_languages : ["all"],
+        status: (row.status as any) || "draft",
+        isActive: Boolean(row.is_active || row.status === "published"),
+        startAt: row.start_at,
+        endAt: row.end_at || null,
+        buttonText: row.button_text || "Wish You The Same!",
+        createdAt: row.created_at,
+        updatedAt: row.updated_at,
+        createdBy: row.created_by || "SSA Administrator",
+        viewsCount: Number(row.views_count || 0),
+        dismissalsCount: Number(row.dismissals_count || 0)
+      }));
+    } catch (err) {
+      console.error("[AdminApi] getAllFestivalGreetings exception:", err);
+      return [];
+    }
+  },
+
+  async saveFestivalGreeting(greeting: Partial<FestivalGreeting>): Promise<{ success: boolean; greeting?: FestivalGreeting; error?: string }> {
+    try {
+      const { data, error } = await supabase.rpc("admin_save_festival_greeting", {
+        p_greeting: {
+          id: greeting.id,
+          festivalName: greeting.festivalName,
+          title: greeting.title,
+          subtitle: greeting.subtitle,
+          message: greeting.message,
+          artworkUrl: greeting.artworkUrl,
+          storagePath: greeting.storagePath,
+          senderText: greeting.senderText,
+          supportedLanguages: greeting.supportedLanguages || ["all"],
+          status: greeting.status || "draft",
+          startAt: greeting.startAt,
+          endAt: greeting.endAt,
+          buttonText: greeting.buttonText,
+          createdBy: greeting.createdBy || "SSA Administrator"
+        }
+      });
+
+      if (error) {
+        return { success: false, error: error.message };
+      }
+      if (!data?.success) {
+        return { success: false, error: data?.error || "Failed to save festival greeting." };
+      }
+
+      return { success: true, greeting: data.greeting };
+    } catch (err: any) {
+      return { success: false, error: err?.message || "An unexpected error occurred." };
+    }
+  },
+
+  async deleteFestivalGreeting(id: string, storagePath?: string): Promise<boolean> {
+    try {
+      const { data, error } = await supabase.rpc("admin_delete_festival_greeting", {
+        p_id: id
+      });
+
+      if (error) {
+        console.error("[AdminApi] admin_delete_festival_greeting error:", error);
+        return false;
+      }
+
+      const fileToDelete = storagePath || data?.storagePath;
+      if (fileToDelete) {
+        try {
+          await supabase.storage.from("ssc-banners").remove([fileToDelete]);
+        } catch (storageErr) {
+          console.warn("[AdminApi] Storage file removal warning:", storageErr);
+        }
+      }
+
+      return true;
+    } catch (err) {
+      console.error("[AdminApi] deleteFestivalGreeting exception:", err);
+      return false;
+    }
+  },
+
+  async toggleFestivalGreetingStatus(id: string, status: string): Promise<boolean> {
+    try {
+      const { data, error } = await supabase.rpc("admin_toggle_festival_greeting_status", {
+        p_id: id,
+        p_status: status
+      });
+
+      if (error || !data?.success) {
+        console.error("[AdminApi] admin_toggle_festival_greeting_status error:", error || data?.error);
+        return false;
+      }
+
+      return true;
+    } catch (err) {
+      console.error("[AdminApi] toggleFestivalGreetingStatus exception:", err);
+      return false;
+    }
+  },
+
+  /**
+   * ============================================================================
+   * MANUAL ALERTS & POPUP MESSAGES MANAGEMENT
+   * ============================================================================
+   */
+
+  async getAllAlertPopups(): Promise<AlertPopup[]> {
+    try {
+      const { data, error } = await supabase
+        .from("ssc_alert_popups")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.error("[AdminApi] getAllAlertPopups error:", error);
+        return [];
+      }
+
+      return (data || []).map((row: any) => ({
+        id: row.id,
+        title: row.title,
+        message: row.message,
+        imageUrl: row.image_url || undefined,
+        storagePath: row.storage_path || undefined,
+        popupType: (row.popup_type as any) || "general",
+        priority: (row.priority as any) || "normal",
+        targetAudience: row.target_audience || "all",
+        status: (row.status as any) || "draft",
+        isActive: Boolean(row.is_active || row.status === "published"),
+        isDismissible: Boolean(row.is_dismissible ?? true),
+        displayFrequency: (row.display_frequency as any) || "once",
+        buttonText: row.button_text || "Dismiss",
+        buttonActionType: (row.button_action_type as any) || "none",
+        buttonActionTarget: row.button_action_target || "",
+        startAt: row.start_at,
+        endAt: row.end_at || null,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at,
+        createdBy: row.created_by || "SSA Administrator",
+        deliveredCount: Number(row.delivered_count || 0),
+        viewedCount: Number(row.viewed_count || 0),
+        dismissedCount: Number(row.dismissed_count || 0),
+        acknowledgedCount: Number(row.acknowledged_count || 0)
+      }));
+    } catch (err) {
+      console.error("[AdminApi] getAllAlertPopups exception:", err);
+      return [];
+    }
+  },
+
+  async saveAlertPopup(alert: Partial<AlertPopup>): Promise<{ success: boolean; alert?: AlertPopup; error?: string }> {
+    try {
+      const { data, error } = await supabase.rpc("admin_save_alert_popup", {
+        p_alert: {
+          id: alert.id,
+          title: alert.title,
+          message: alert.message,
+          imageUrl: alert.imageUrl,
+          storagePath: alert.storagePath,
+          popupType: alert.popupType || "general",
+          priority: alert.priority || "normal",
+          targetAudience: alert.targetAudience || "all",
+          status: alert.status || "draft",
+          isDismissible: alert.isDismissible ?? true,
+          displayFrequency: alert.displayFrequency || "once",
+          buttonText: alert.buttonText || "Dismiss",
+          buttonActionType: alert.buttonActionType || "none",
+          buttonActionTarget: alert.buttonActionTarget || "",
+          startAt: alert.startAt,
+          endAt: alert.endAt,
+          createdBy: alert.createdBy || "SSA Administrator"
+        }
+      });
+
+      if (error) {
+        return { success: false, error: error.message };
+      }
+      if (!data?.success) {
+        return { success: false, error: data?.error || "Failed to save alert popup." };
+      }
+
+      return { success: true, alert: data.alert };
+    } catch (err: any) {
+      return { success: false, error: err?.message || "An unexpected error occurred." };
+    }
+  },
+
+  async deleteAlertPopup(id: string, storagePath?: string): Promise<boolean> {
+    try {
+      const { data, error } = await supabase.rpc("admin_delete_alert_popup", {
+        p_id: id
+      });
+
+      if (error) {
+        console.error("[AdminApi] admin_delete_alert_popup error:", error);
+        return false;
+      }
+
+      const fileToDelete = storagePath || data?.storagePath;
+      if (fileToDelete) {
+        try {
+          await supabase.storage.from("ssc-banners").remove([fileToDelete]);
+        } catch (storageErr) {
+          console.warn("[AdminApi] Storage file removal warning:", storageErr);
+        }
+      }
+
+      return true;
+    } catch (err) {
+      console.error("[AdminApi] deleteAlertPopup exception:", err);
+      return false;
+    }
+  },
+
+  async toggleAlertPopupStatus(id: string, status: string): Promise<boolean> {
+    try {
+      const { data, error } = await supabase.rpc("admin_toggle_alert_popup_status", {
+        p_id: id,
+        p_status: status
+      });
+
+      if (error || !data?.success) {
+        console.error("[AdminApi] admin_toggle_alert_popup_status error:", error || data?.error);
+        return false;
+      }
+
+      return true;
+    } catch (err) {
+      console.error("[AdminApi] toggleAlertPopupStatus exception:", err);
+      return false;
+    }
+  },
+
+  /**
+   * Upload artwork/banner image for popups or greeting cards
+   */
+  async uploadPopupArtwork(
+    file: Blob | File | ArrayBuffer | Uint8Array,
+    fileName: string,
+    folderPrefix: "greetings" | "popups" = "greetings",
+    contentType = "image/webp"
+  ): Promise<{ success: boolean; publicUrl?: string; storagePath?: string; error?: string }> {
+    try {
+      const sanitizedName = fileName.replace(/[^a-zA-Z0-9._-]/g, "_");
+      const path = `${folderPrefix}/${Date.now()}_${sanitizedName}`;
+
+      const { data, error } = await supabase.storage
+        .from("ssc-banners")
+        .upload(path, file, {
+          contentType,
+          upsert: true
+        });
+
+      if (error) {
+        console.error("[AdminApi] uploadPopupArtwork error:", error);
+        return { success: false, error: error.message };
+      }
+
+      const { data: publicData } = supabase.storage
+        .from("ssc-banners")
+        .getPublicUrl(data.path);
+
+      return {
+        success: true,
+        publicUrl: publicData.publicUrl,
+        storagePath: data.path
+      };
+    } catch (err: any) {
+      console.error("[AdminApi] uploadPopupArtwork exception:", err);
+      return { success: false, error: err?.message || "Failed to upload image artwork." };
+    }
+  },
+
+  /**
+   * Realtime subscriber for Greetings & Alerts
+   */
+  subscribeToPopupsAndGreetings(onUpdate: () => void): () => void {
+    const channel = supabase
+      .channel("ssc_popups_and_greetings_realtime")
+      .on("postgres_changes", { event: "*", schema: "public", table: "ssc_festival_greetings" }, () => onUpdate())
+      .on("postgres_changes", { event: "*", schema: "public", table: "ssc_alert_popups" }, () => onUpdate())
       .subscribe();
 
     return () => {

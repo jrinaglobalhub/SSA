@@ -6,6 +6,7 @@ import { SscScreen } from "./SscScreen";
 import { SsmScreen } from "./SsmScreen";
 import { SsdScreen } from "./SsdScreen";
 import { ReferralsScreen } from "./ReferralsScreen";
+import { AlertsGreetingsScreen } from "./AlertsGreetingsScreen";
 
 interface DashboardPreviewProps {
   isDark?: boolean;
@@ -20,7 +21,7 @@ export const DashboardPreview: React.FC<DashboardPreviewProps> = ({
   onOpenAbout,
   onSignOut
 }) => {
-  const [activeSection, setActiveSection] = useState<"overview" | "ssc" | "ssm" | "ssd" | "referrals">("overview");
+  const [activeSection, setActiveSection] = useState<"overview" | "ssc" | "popups" | "ssm" | "ssd" | "referrals">("overview");
 
   return (
     <View style={[styles.container, { backgroundColor: isDark ? "#0B0F17" : "#F8FAFC" }]}>
@@ -44,6 +45,8 @@ export const DashboardPreview: React.FC<DashboardPreviewProps> = ({
         )}
 
         {activeSection === "ssc" && <SscScreen isDark={isDark} />}
+
+        {activeSection === "popups" && <AlertsGreetingsScreen isDark={isDark} />}
 
         {activeSection === "ssm" && <SsmScreen isDark={isDark} />}
 

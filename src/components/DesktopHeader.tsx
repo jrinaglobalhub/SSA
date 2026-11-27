@@ -21,7 +21,8 @@ import {
   Users,
   Share2,
   Info,
-  LogOut
+  LogOut,
+  BellRing
 } from "lucide-react-native";
 
 interface DesktopHeaderProps {
@@ -29,8 +30,8 @@ interface DesktopHeaderProps {
   onToggleTheme?: () => void;
   onOpenAbout?: () => void;
   onSignOut?: () => void;
-  activeSection?: "overview" | "ssc" | "ssm" | "ssd" | "referrals";
-  onSelectSection?: (section: "overview" | "ssc" | "ssm" | "ssd" | "referrals") => void;
+  activeSection?: "overview" | "ssc" | "ssm" | "ssd" | "referrals" | "popups";
+  onSelectSection?: (section: "overview" | "ssc" | "ssm" | "ssd" | "referrals" | "popups") => void;
 }
 
 export const DesktopHeader: React.FC<DesktopHeaderProps> = ({
@@ -67,6 +68,7 @@ export const DesktopHeader: React.FC<DesktopHeaderProps> = ({
   const navItems = [
     { key: "overview", label: "Overview", icon: Layers },
     { key: "ssc", label: "SSC (Consumer)", icon: Users },
+    { key: "popups", label: "Alerts & Greetings", icon: BellRing },
     { key: "ssm", label: "SSM (Merchant)", icon: Store },
     { key: "ssd", label: "SSD (Delivery)", icon: Truck },
     { key: "referrals", label: "Referrals", icon: Share2 }

@@ -17,14 +17,15 @@ import {
   Clock,
   CheckCircle2,
   AlertCircle,
-  Share2
+  Share2,
+  BellRing
 } from "lucide-react-native";
 import { AdminApi, OverviewMetrics } from "../api/adminApi";
 import { SeasonalThemeControl } from "../components/SeasonalThemeControl";
 
 interface OverviewScreenProps {
   isDark?: boolean;
-  onNavigateToSection: (section: "overview" | "ssc" | "ssm" | "ssd" | "referrals") => void;
+  onNavigateToSection: (section: "overview" | "ssc" | "popups" | "ssm" | "ssd" | "referrals") => void;
 }
 
 export const OverviewScreen: React.FC<OverviewScreenProps> = ({
@@ -197,6 +198,14 @@ export const OverviewScreen: React.FC<OverviewScreenProps> = ({
           >
             <Users size={18} color="#2563EB" />
             <Text style={[styles.navQuickText, { color: colors.textMain }]}>SSC Consumers</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.navQuickBtn, { borderColor: colors.border }]}
+            onPress={() => onNavigateToSection("popups")}
+          >
+            <BellRing size={18} color="#FC4E03" />
+            <Text style={[styles.navQuickText, { color: colors.textMain }]}>Alerts & Greetings</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
