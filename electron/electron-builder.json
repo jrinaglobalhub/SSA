@@ -2,13 +2,14 @@
   "appId": "online.jrina.smartshopper.admin",
   "productName": "SSA",
   "copyright": "Copyright © 2026 JRINA Private Limited",
-  "compression": "maximum",
+  "compression": "normal",
   "asar": true,
   "directories": {
     "output": "dist-electron"
   },
   "extraMetadata": {
-    "main": "electron/main.js"
+    "main": "electron/main.js",
+    "dependencies": {}
   },
   "files": [
     "dist/**/*",
