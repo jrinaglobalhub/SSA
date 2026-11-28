@@ -60,7 +60,8 @@ import {
   ArrowDown,
   Sliders,
   Layout,
-  Lock
+  Lock,
+  BellRing
 } from "lucide-react-native";
 import {
   AdminApi,
@@ -72,9 +73,11 @@ import {
   SudoActionResult
 } from "../api/adminApi";
 import { SudoConfirmationModal, SudoTarget } from "../components/SudoConfirmationModal";
+import { AlertsGreetingsScreen } from "./AlertsGreetingsScreen";
 
 interface SscScreenProps {
   isDark?: boolean;
+  initialSubTab?: "consumers" | "banners" | "greetings" | "alerts";
 }
 
 const PAGE_SIZE = 10;
@@ -289,9 +292,15 @@ function istInputToUTC(istInput: string): string | null {
   }
 }
 
-export const SscScreen: React.FC<SscScreenProps> = ({ isDark = false }) => {
-  // Main Sub-Tab State: 'consumers' vs 'banners'
-  const [activeSubTab, setActiveSubTab] = useState<"consumers" | "banners">("consumers");
+export const SscScreen: React.FC<SscScreenProps> = ({ isDark = false, initialSubTab = "consumers" }) => {
+  // Main Sub-Tab State: 'consumers' | 'banners' | 'greetings' | 'alerts'
+  const [activeSubTab, setActiveSubTab] = useState<"consumers" | "banners" | "greetings" | "alerts">(initialSubTab);
+
+  useEffect(() => {
+    if (initialSubTab) {
+      setActiveSubTab(initialSubTab);
+    }
+  }, [initialSubTab]);
 
   // Secondary Sub-tab inside Banner Management:
   // 'all' (All Banners) | 'default' (Default System Banners) | 'custom' (Custom Banners) | 'ssm_approved' (Approved SSM Banners)
@@ -1271,7 +1280,13 @@ export const SscScreen: React.FC<SscScreenProps> = ({ isDark = false }) => {
         <View style={{ flex: 1 }}>
           <View style={{ flexDirection: "row", alignItems: "center" }}>
             <Text style={[styles.topBarTitle, { color: colors.textMain }]}>
-              {activeSubTab === "consumers" ? "SSC – Consumer Directory" : "SSC – Promotional Banner Management"}
+              {activeSubTab === "consumers"
+                ? "SSC – Consumer Directory"
+                : activeSubTab === "banners"
+                ? "SSC – Promotional Banner Management"
+                : activeSubTab === "greetings"
+                ? "SSC – Festival Greeting Cards"
+                : "SSC – Alerts & Popup Messages"}
             </Text>
             <View style={styles.liveIndicator}>
               <View style={styles.greenPulse} />
@@ -1283,7 +1298,11 @@ export const SscScreen: React.FC<SscScreenProps> = ({ isDark = false }) => {
               ? loading
                 ? "Querying database..."
                 : `Verified database records: ${total} consumers`
-              : `Total Managed Banners: ${banners.length} • Approved SSM Requests: ${approvedSsmBanners.length}`}
+              : activeSubTab === "banners"
+              ? `Total Managed Banners: ${banners.length} • Approved SSM Requests: ${approvedSsmBanners.length}`
+              : activeSubTab === "greetings"
+              ? "Design, schedule, preview and publish festive greeting cards for consumers"
+              : "Emergency alerts, service notices, announcements, and modal popups"}
           </Text>
         </View>
 
@@ -1299,7 +1318,7 @@ export const SscScreen: React.FC<SscScreenProps> = ({ isDark = false }) => {
       </View>
 
       {/* ===================================================================== */}
-      {/* 2. MAIN SUB-TAB NAVIGATION: Consumers vs Banner Management           */}
+      {/* 2. MAIN SUB-TAB NAVIGATION                                            */}
       {/* ===================================================================== */}
       <View style={[styles.subTabBar, { backgroundColor: colors.cardBg, borderColor: colors.border }]}>
         <TouchableOpacity
@@ -1355,6 +1374,62 @@ export const SscScreen: React.FC<SscScreenProps> = ({ isDark = false }) => {
             ]}
           >
             Banner Management ({banners.length})
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[
+            styles.subTabBtn,
+            {
+              backgroundColor: activeSubTab === "greetings" ? colors.subTabActiveBg : colors.subTabInactiveBg
+            }
+          ]}
+          onPress={() => setActiveSubTab("greetings")}
+          activeOpacity={0.8}
+        >
+          <Sparkles
+            size={14}
+            color={activeSubTab === "greetings" ? "#FFFFFF" : colors.textSub}
+            style={{ marginRight: 6 }}
+          />
+          <Text
+            style={[
+              styles.subTabText,
+              {
+                color: activeSubTab === "greetings" ? "#FFFFFF" : colors.textSub,
+                fontWeight: activeSubTab === "greetings" ? "800" : "600"
+              }
+            ]}
+          >
+            Festival Greetings
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[
+            styles.subTabBtn,
+            {
+              backgroundColor: activeSubTab === "alerts" ? colors.subTabActiveBg : colors.subTabInactiveBg
+            }
+          ]}
+          onPress={() => setActiveSubTab("alerts")}
+          activeOpacity={0.8}
+        >
+          <BellRing
+            size={14}
+            color={activeSubTab === "alerts" ? "#FFFFFF" : colors.textSub}
+            style={{ marginRight: 6 }}
+          />
+          <Text
+            style={[
+              styles.subTabText,
+              {
+                color: activeSubTab === "alerts" ? "#FFFFFF" : colors.textSub,
+                fontWeight: activeSubTab === "alerts" ? "800" : "600"
+              }
+            ]}
+          >
+            Popup Alerts
           </Text>
         </TouchableOpacity>
       </View>
@@ -2623,6 +2698,32 @@ export const SscScreen: React.FC<SscScreenProps> = ({ isDark = false }) => {
               )}
             </View>
           )}
+        </View>
+      )}
+
+      {/* ===================================================================== */}
+      {/* 5. FESTIVAL GREETINGS SUB-TAB CONTENT                                 */}
+      {/* ===================================================================== */}
+      {activeSubTab === "greetings" && (
+        <View style={{ flex: 1 }}>
+          <AlertsGreetingsScreen
+            isDark={isDark}
+            defaultTab="greetings"
+            onTabChange={(tab) => setActiveSubTab(tab)}
+          />
+        </View>
+      )}
+
+      {/* ===================================================================== */}
+      {/* 6. POPUP ALERTS SUB-TAB CONTENT                                       */}
+      {/* ===================================================================== */}
+      {activeSubTab === "alerts" && (
+        <View style={{ flex: 1 }}>
+          <AlertsGreetingsScreen
+            isDark={isDark}
+            defaultTab="alerts"
+            onTabChange={(tab) => setActiveSubTab(tab)}
+          />
         </View>
       )}
 

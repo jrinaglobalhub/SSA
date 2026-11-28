@@ -48,14 +48,33 @@ import {
 
 interface AlertsGreetingsScreenProps {
   isDark?: boolean;
+  defaultTab?: "greetings" | "alerts";
+  hideHeaderTabs?: boolean;
+  onTabChange?: (tab: "greetings" | "alerts") => void;
 }
 
-export const AlertsGreetingsScreen: React.FC<AlertsGreetingsScreenProps> = ({ isDark = false }) => {
+export const AlertsGreetingsScreen: React.FC<AlertsGreetingsScreenProps> = ({
+  isDark = false,
+  defaultTab = "greetings",
+  hideHeaderTabs = false,
+  onTabChange
+}) => {
   const { width } = useWindowDimensions();
   const isCompact = width < 950;
 
   // Tabs: 'greetings' | 'alerts'
-  const [activeTab, setActiveTab] = useState<"greetings" | "alerts">("greetings");
+  const [activeTab, setActiveTab] = useState<"greetings" | "alerts">(defaultTab);
+
+  useEffect(() => {
+    if (defaultTab && defaultTab !== activeTab) {
+      setActiveTab(defaultTab);
+    }
+  }, [defaultTab]);
+
+  const handleTabChange = (tab: "greetings" | "alerts") => {
+    setActiveTab(tab);
+    onTabChange?.(tab);
+  };
 
   // Data
   const [greetings, setGreetings] = useState<FestivalGreeting[]>([]);
@@ -430,7 +449,8 @@ export const AlertsGreetingsScreen: React.FC<AlertsGreetingsScreenProps> = ({ is
 
   // Toggle Greeting Status
   const handleToggleGreetingStatus = async (greeting: FestivalGreeting) => {
-    const nextStatus = greeting.status === "published" ? "disabled" : "published";
+    const isCurrentlyEnabled = greeting.status === "published" || greeting.status === "scheduled";
+    const nextStatus = isCurrentlyEnabled ? "disabled" : "published";
     setLoading(true);
     await AdminApi.toggleFestivalGreetingStatus(greeting.id, nextStatus);
     loadData();
@@ -568,7 +588,8 @@ export const AlertsGreetingsScreen: React.FC<AlertsGreetingsScreenProps> = ({ is
 
   // Toggle Alert Status
   const handleToggleAlertStatus = async (alertItem: AlertPopup) => {
-    const nextStatus = alertItem.status === "published" ? "disabled" : "published";
+    const isCurrentlyEnabled = alertItem.status === "published" || alertItem.status === "scheduled";
+    const nextStatus = isCurrentlyEnabled ? "disabled" : "published";
     setLoading(true);
     await AdminApi.toggleAlertPopupStatus(alertItem.id, nextStatus);
     loadData();
@@ -717,53 +738,55 @@ export const AlertsGreetingsScreen: React.FC<AlertsGreetingsScreenProps> = ({ is
       </View>
 
       {/* Main Navigation Tabs */}
-      <View style={[styles.tabsNav, { borderBottomColor: colors.border }]}>
-        <TouchableOpacity
-          style={[
-            styles.tabItem,
-            activeTab === "greetings" && [styles.tabItemActive, { borderBottomColor: colors.accent }]
-          ]}
-          onPress={() => setActiveTab("greetings")}
-          activeOpacity={0.8}
-        >
-          <Sparkles
-            size={18}
-            color={activeTab === "greetings" ? colors.accent : colors.textSub}
-            style={{ marginRight: 8 }}
-          />
-          <Text
+      {!hideHeaderTabs && (
+        <View style={[styles.tabsNav, { borderBottomColor: colors.border }]}>
+          <TouchableOpacity
             style={[
-              styles.tabItemText,
-              { color: activeTab === "greetings" ? colors.accent : colors.textSub }
+              styles.tabItem,
+              activeTab === "greetings" && [styles.tabItemActive, { borderBottomColor: colors.accent }]
             ]}
+            onPress={() => handleTabChange("greetings")}
+            activeOpacity={0.8}
           >
-            Festival Greeting Cards ({greetings.length})
-          </Text>
-        </TouchableOpacity>
+            <Sparkles
+              size={18}
+              color={activeTab === "greetings" ? colors.accent : colors.textSub}
+              style={{ marginRight: 8 }}
+            />
+            <Text
+              style={[
+                styles.tabItemText,
+                { color: activeTab === "greetings" ? colors.accent : colors.textSub }
+              ]}
+            >
+              Festival Greeting Cards ({greetings.length})
+            </Text>
+          </TouchableOpacity>
 
-        <TouchableOpacity
-          style={[
-            styles.tabItem,
-            activeTab === "alerts" && [styles.tabItemActive, { borderBottomColor: colors.accent }]
-          ]}
-          onPress={() => setActiveTab("alerts")}
-          activeOpacity={0.8}
-        >
-          <AlertCircle
-            size={18}
-            color={activeTab === "alerts" ? colors.accent : colors.textSub}
-            style={{ marginRight: 8 }}
-          />
-          <Text
+          <TouchableOpacity
             style={[
-              styles.tabItemText,
-              { color: activeTab === "alerts" ? colors.accent : colors.textSub }
+              styles.tabItem,
+              activeTab === "alerts" && [styles.tabItemActive, { borderBottomColor: colors.accent }]
             ]}
+            onPress={() => handleTabChange("alerts")}
+            activeOpacity={0.8}
           >
-            Alerts & Popup Messages ({alerts.length})
-          </Text>
-        </TouchableOpacity>
-      </View>
+            <AlertCircle
+              size={18}
+              color={activeTab === "alerts" ? colors.accent : colors.textSub}
+              style={{ marginRight: 8 }}
+            />
+            <Text
+              style={[
+                styles.tabItemText,
+                { color: activeTab === "alerts" ? colors.accent : colors.textSub }
+              ]}
+            >
+              Alerts & Popup Messages ({alerts.length})
+            </Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
       {/* TAB 1: FESTIVAL GREETING CARDS */}
       {activeTab === "greetings" && (
@@ -931,16 +954,16 @@ export const AlertsGreetingsScreen: React.FC<AlertsGreetingsScreenProps> = ({ is
                     >
                       <Radio
                         size={14}
-                        color={item.status === "published" ? "#DC2626" : "#16A34A"}
+                        color={(item.status === "published" || item.status === "scheduled") ? "#DC2626" : "#16A34A"}
                         style={{ marginRight: 4 }}
                       />
                       <Text
                         style={[
                           styles.footerActionText,
-                          { color: item.status === "published" ? "#DC2626" : "#16A34A" }
+                          { color: (item.status === "published" || item.status === "scheduled") ? "#DC2626" : "#16A34A" }
                         ]}
                       >
-                        {item.status === "published" ? "Disable" : "Publish"}
+                        {(item.status === "published" || item.status === "scheduled") ? "Disable" : "Publish"}
                       </Text>
                     </TouchableOpacity>
 
@@ -1181,16 +1204,16 @@ export const AlertsGreetingsScreen: React.FC<AlertsGreetingsScreenProps> = ({ is
                       >
                         <Radio
                           size={14}
-                          color={item.status === "published" ? "#DC2626" : "#16A34A"}
+                          color={(item.status === "published" || item.status === "scheduled") ? "#DC2626" : "#16A34A"}
                           style={{ marginRight: 4 }}
                         />
                         <Text
                           style={[
                             styles.footerActionText,
-                            { color: item.status === "published" ? "#DC2626" : "#16A34A" }
+                            { color: (item.status === "published" || item.status === "scheduled") ? "#DC2626" : "#16A34A" }
                           ]}
                         >
-                          {item.status === "published" ? "Disable" : "Publish"}
+                          {(item.status === "published" || item.status === "scheduled") ? "Disable" : "Publish"}
                         </Text>
                       </TouchableOpacity>
 
