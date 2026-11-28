@@ -4,6 +4,8 @@
   "copyright": "Copyright © 2026 JRINA Private Limited",
   "compression": "normal",
   "asar": true,
+  "npmRebuild": false,
+  "nodeGypRebuild": false,
   "directories": {
     "output": "dist-electron"
   },
